@@ -1,0 +1,41 @@
+# ServizDesk Tenant App (SDTA) — Python 3.12, Django 6.0
+# ─────────────────────────────────────────────────────────────────────────────
+# Runtime dependencies
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Framework — 6.0.x patch track (requires Python >=3.12).
+# Upgrade to 6.2 LTS when it releases (estimated April 2027).
+Django>=6.0,<6.1
+
+# PostgreSQL adapter — binary wheels (no system libpq needed)
+psycopg2-binary>=2.9
+
+# Environment / secrets from .env files
+python-decouple>=3.8
+
+# REST API framework
+djangorestframework>=3.15
+django-filter>=24.0
+
+# Async task queue
+celery>=5.4
+redis>=5.0
+django-celery-results>=2.5
+
+# Login-attempt lockout — 7.x series targets Django 6.0
+django-axes>=7.0
+
+# Content-Security-Policy headers
+# django-csp 4.x replaced the old CSP_* tuple settings with a single
+# CONTENT_SECURITY_POLICY dict.  4.0+ is required for Django 6.0 support.
+django-csp>=4.0
+
+# ASGI server compatibility layer
+asgiref>=3.8
+
+# Image processing (document previews/thumbnails)
+Pillow>=12.2.0
+
+# Field-level encryption — PyCA-maintained binding to libsodium.
+# Used by config/encryption.py for EncryptedCharField / EncryptedTextField.
+PyNaCl>=1.5,<2

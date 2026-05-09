@@ -1,0 +1,42 @@
+{% comment %}
+Sub-header — Detail variant. See BLOCK_REFERENCE.md §5.1.2.
+
+Three regions: record (left, name + meta), tags (center), actions (right).
+
+Data contract:
+  record_name  (required, string)
+  record_meta  (optional, string)        e.g. "CU26-00125 · Commercial"
+  tags         (optional, iterable):     each {label, variant}
+                                          variant ∈ §3.1 palette tokens
+  actions      (optional, iterable):     each {label, href OR onclick OR
+                                          (data_bs_toggle + data_bs_target),
+                                          variant ('primary'/'secondary'/'destructive'),
+                                          icon}
+{% endcomment %}<div class="sd-subheader sd-subheader--detail">
+  <div class="sd-subheader-record">
+    <h2 class="sd-subheader-name">{{ record_name }}</h2>
+    {% if record_meta %}<div class="sd-subheader-meta">{{ record_meta }}</div>{% endif %}
+  </div>
+  <div class="sd-subheader-tags">
+    {% for tag in tags %}
+      <span class="sd-tag sd-tag--{{ tag.variant|default:'neutral' }}">{{ tag.label }}</span>
+    {% endfor %}
+  </div>
+  <div class="sd-subheader-actions">
+    {% for action in actions %}
+      {% if action.href %}
+        <a href="{{ action.href }}"
+           class="btn {% if action.variant == 'destructive' %}btn-danger{% elif action.variant == 'secondary' %}btn-outline-secondary{% else %}btn-primary{% endif %}">
+          {% if action.icon %}<i data-lucide="{{ action.icon }}" aria-hidden="true"></i>{% endif %}{{ action.label }}
+        </a>
+      {% else %}
+        <button type="button"
+                class="btn {% if action.variant == 'destructive' %}btn-danger{% elif action.variant == 'secondary' %}btn-outline-secondary{% else %}btn-primary{% endif %}"
+                {% if action.data_bs_toggle %}data-bs-toggle="{{ action.data_bs_toggle }}" data-bs-target="{{ action.data_bs_target }}"{% endif %}
+                {% if action.onclick %}onclick="{{ action.onclick }}"{% endif %}>
+          {% if action.icon %}<i data-lucide="{{ action.icon }}" aria-hidden="true"></i>{% endif %}{{ action.label }}
+        </button>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>

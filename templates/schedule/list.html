@@ -1,0 +1,92 @@
+{% extends "_section_base.html" %}
+
+{% comment %}
+  Starter Schedule view — chronological list of upcoming jobs.
+  Phase 8.1 replaces this with the calendar (Day/Week/Month) per spec §5.
+{% endcomment %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">Schedule</span>
+{% endblock %}
+
+{% block section_actions %}
+  <span class="badge bg-info-subtle text-info-emphasis">Calendar view in Phase 8.1</span>
+{% endblock %}
+
+{% block section_body %}
+<div class="row g-3">
+
+  <div class="col-12 col-lg-8">
+    <div class="sd-section-card overflow-hidden">
+      <div class="px-4 pt-3 pb-2 border-bottom">
+        <h2 class="h6 fw-semibold text-body-secondary mb-0">Upcoming Jobs</h2>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Date</th>
+              <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Time</th>
+              <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Customer</th>
+              <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Subject</th>
+              <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Assigned</th>
+              <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for j in jobs %}
+            <tr>
+              <td class="text-body-secondary">{{ j.scheduled_date|date:"M j, Y" }}</td>
+              <td class="text-body-secondary">{{ j.scheduled_time|time:"g:i A"|default:"—" }}</td>
+              <td class="text-body-secondary">
+                {% if j.customer %}<a href="{% url 'customer-detail' j.customer.pk %}" class="link-brand text-decoration-none">{{ j.customer }}</a>{% else %}—{% endif %}
+              </td>
+              <td>
+                <a href="{% url 'job-detail' j.pk %}" class="link-brand text-decoration-none fw-medium">{{ j.subject }}</a>
+              </td>
+              <td class="text-body-secondary">{{ j.assigned_to.username|default:"—" }}</td>
+              <td>
+                {% if j.status == 'Scheduled' %}
+                  <span class="badge bg-info-subtle text-info-emphasis">Scheduled</span>
+                {% elif j.status == 'In Progress' %}
+                  <span class="badge bg-primary-subtle text-primary-emphasis">In Progress</span>
+                {% elif j.status == 'On Hold' %}
+                  <span class="badge bg-warning-subtle text-warning-emphasis">On Hold</span>
+                {% else %}
+                  <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ j.status }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center text-body-secondary py-5">No upcoming jobs scheduled.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="sd-section-card overflow-hidden">
+      <div class="px-4 pt-3 pb-2 border-bottom">
+        <h2 class="h6 fw-semibold text-body-secondary mb-0">Unscheduled Jobs</h2>
+        <p class="small text-body-secondary mb-0">Jobs without a scheduled date.</p>
+      </div>
+      <ul class="list-group list-group-flush small">
+        {% for j in unscheduled %}
+        <li class="list-group-item px-4">
+          <a href="{% url 'job-detail' j.pk %}" class="link-brand text-decoration-none fw-medium">{{ j.subject }}</a>
+          <div class="text-body-secondary">{{ j.customer|default:"(no customer)" }}</div>
+        </li>
+        {% empty %}
+        <li class="list-group-item px-4 text-body-secondary text-center py-4">No unscheduled jobs.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

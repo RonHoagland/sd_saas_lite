@@ -1,0 +1,73 @@
+{% extends "_section_base.html" %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">Payments</span>
+{% endblock %}
+
+{% block section_actions %}
+  <a href="#" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+    <i data-lucide="plus"></i> Record Payment
+  </a>
+{% endblock %}
+
+{% block section_body %}
+<div class="sd-section-card overflow-hidden">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">#</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Date</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Customer</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Invoice</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Method</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Status</th>
+          <th class="text-uppercase text-body-secondary text-end" style="font-size:11px;letter-spacing:0.04em;">Amount</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td>
+            <a href="{% url 'payment-detail' p.pk %}" class="link-brand text-decoration-none fw-medium">
+              {{ p.payment_number|default:"(unsaved)" }}
+            </a>
+          </td>
+          <td class="text-body-secondary">{{ p.payment_date|date:"M j, Y" }}</td>
+          <td class="text-body-secondary">
+            {% if p.invoice and p.invoice.customer %}
+              <a href="{% url 'customer-detail' p.invoice.customer.pk %}" class="link-brand text-decoration-none">{{ p.invoice.customer }}</a>
+            {% else %}—{% endif %}
+          </td>
+          <td class="text-body-secondary">
+            {% if p.invoice %}
+              <a href="{% url 'invoice-detail' p.invoice.pk %}" class="link-brand text-decoration-none">{{ p.invoice.invoice_number|default:"—" }}</a>
+            {% else %}—{% endif %}
+          </td>
+          <td class="text-body-secondary">{{ p.method }}</td>
+          <td>
+            {% if p.status == 'Applied' or p.status == 'Paid' %}
+              <span class="badge bg-success-subtle text-success-emphasis">{{ p.status }}</span>
+            {% elif p.status == 'Voided' or p.status == 'Returned' or p.status == 'Refunded' %}
+              <span class="badge bg-danger-subtle text-danger-emphasis">{{ p.status }}</span>
+            {% else %}
+              <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ p.status }}</span>
+            {% endif %}
+          </td>
+          <td class="text-end">${{ p.amount|floatformat:2 }}</td>
+          <td class="text-end">
+            <a href="{% url 'payment-detail' p.pk %}" class="link-brand text-decoration-none small">View</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="text-center text-body-secondary py-5">No payments yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% load sd_ui %}{% comment %}
+List Block — see BLOCK_REFERENCE.md §3.2.
+
+Sortable list/table of records. One block, two size variants.
+
+Data contract:
+  variant         (optional)  "compact" (default) | "full"
+  title           (required)  Block heading
+  heading_level   (optional)  2 (default) or 3 (Detail pages); see §6.2
+  columns         (required)  iterable of column dicts:
+                              { key, label, is_primary, sortable, align, width }
+                              Exactly one column should have is_primary=True.
+  rows            (required)  iterable of row dicts:
+                              { <column_key>: value, ..., _href: detail_url }
+  new_record      (optional)  { label, href, icon } — top action strip, left
+  filters         (optional, full only) iterable of filter dicts:
+                              { label, name, options:[{value,label}], value }
+  search          (optional, full only) { placeholder, name, value }
+  pagination      (optional, full only) { page, total_pages, has_prev, has_next,
+                                          prev_url, next_url }
+  current_sort    (optional)  { column_key, direction } where direction in {asc,desc}
+  max_height      (optional, compact only) CSS height (default "24rem")
+  empty_text      (optional)  Message when rows is empty
+  empty_action    (optional)  { label, href, icon }
+
+Top action strip auto-hides when none of new_record/filters/search are passed.
+{% endcomment %}{% with variant=variant|default:"compact" h_level=heading_level|default:2 max_h=max_height|default:"24rem" cs=current_sort|default_if_none:"" %}
+
+{% if variant == "full" and filters or variant == "full" and search %}
+<div class="sd-list-action-strip">
+  <div class="sd-list-toolbar">
+    {% if search %}
+      <input type="search"
+             name="{{ search.name|default:'q' }}"
+             class="sd-list-search"
+             placeholder="{{ search.placeholder|default:'Search…' }}"
+             value="{{ search.value|default:'' }}"
+             aria-label="{{ search.placeholder|default:'Search' }}">
+    {% endif %}
+    {% for filter in filters %}
+      <div class="dropdown">
+        {% comment %}
+          Always show "{Label}: {Selected}" — never just the label, so users
+          can see at a glance what's currently filtered. value_label is
+          precomputed in the view (defaults to "All" when unfiltered).
+        {% endcomment %}
+        <button class="sd-list-filter-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <span class="sd-list-filter-label">{{ filter.label }}:</span>
+          <span class="sd-list-filter-value">{{ filter.value_label|default:"All" }}</span>
+        </button>
+        <ul class="dropdown-menu">
+          {% for option in filter.options %}
+            <li><a class="dropdown-item{% if option.value == filter.value %} active{% endif %}" href="?{{ filter.name }}={{ option.value }}">{{ option.label }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<section class="sd-list sd-list--{{ variant }}" aria-labelledby="sd-list-{{ title|slugify }}">
+  <header class="sd-list-header">
+    <h{{ h_level }} class="sd-list-title" id="sd-list-{{ title|slugify }}">{{ title }}</h{{ h_level }}>
+    {% if new_record %}
+      {# Default to brand-deep for "create" actions; per-call accent token overrides. #}
+      <a class="btn btn-sm sd-action-btn sd-list-header-action"
+         style="--sd-action-accent: var(--sd-accent-{{ new_record.accent|default:'brand' }}-deep);"
+         href="{{ new_record.href }}">
+        {% if new_record.icon %}<i data-lucide="{{ new_record.icon }}" aria-hidden="true"></i>{% endif %}
+        {{ new_record.label }}
+      </a>
+    {% endif %}
+  </header>
+  <div class="sd-list-table-wrap"{% if variant == "compact" %} style="max-height: {{ max_h }};"{% endif %}>
+    <table class="sd-list-table">
+      <thead>
+        <tr>
+          {% for col in columns %}
+            <th scope="col"{% if col.align %} class="sd-align-{{ col.align }}"{% endif %}{% if col.width %} style="width: {{ col.width }};"{% endif %}>
+              {% if col.sortable %}
+                {# Sort element is an <a> in our server-rendered model — clicking #}
+                {# navigates to a new URL with ?sort=KEY&dir=DIR. Caller computes #}
+                {# col.sort_url with desired params preserved. #}
+                <a class="sd-list-sort" href="{{ col.sort_url|default:'#' }}"
+                   aria-sort="{% if cs and cs.column_key == col.key %}{% if cs.direction == 'asc' %}ascending{% elif cs.direction == 'desc' %}descending{% else %}none{% endif %}{% else %}none{% endif %}">
+                  {{ col.label }}
+                  <span class="sd-list-sort-arrow" aria-hidden="true">{% if cs and cs.column_key == col.key %}{% if cs.direction == 'asc' %}↑{% elif cs.direction == 'desc' %}↓{% else %}↕{% endif %}{% else %}↕{% endif %}</span>
+                </a>
+              {% else %}
+                {{ col.label }}
+              {% endif %}
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            {% for col in columns %}
+              <td{% if col.align %} class="sd-align-{{ col.align }}"{% endif %}>
+                {% if col.is_primary %}
+                  <a href="{{ row|lookup:'_href' }}">{{ row|lookup:col.key }}</a>
+                {% else %}
+                  {{ row|lookup:col.key }}
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="{{ columns|length }}" class="sd-list-empty" role="status">
+              <div class="sd-list-empty-message">{{ empty_text|default:"No records." }}</div>
+              {% if empty_action %}
+                <a class="btn btn-outline-secondary btn-sm" href="{{ empty_action.href }}">
+                  {% if empty_action.icon %}<i data-lucide="{{ empty_action.icon }}" aria-hidden="true"></i>{% endif %}
+                  {{ empty_action.label }}
+                </a>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if variant == "full" and pagination %}
+    <nav class="sd-list-pagination" aria-label="Pagination">
+      <ul>
+        <li>
+          {% if pagination.has_prev %}
+            <a href="{{ pagination.prev_url }}" aria-label="Previous page">◀</a>
+          {% else %}
+            <span aria-disabled="true">◀</span>
+          {% endif %}
+        </li>
+        <li><span>Page {{ pagination.page }} of {{ pagination.total_pages }}</span></li>
+        <li>
+          {% if pagination.has_next %}
+            <a href="{{ pagination.next_url }}" aria-label="Next page">▶</a>
+          {% else %}
+            <span aria-disabled="true">▶</span>
+          {% endif %}
+        </li>
+      </ul>
+    </nav>
+  {% endif %}
+</section>
+{% endwith %}

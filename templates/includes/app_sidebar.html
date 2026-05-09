@@ -1,0 +1,146 @@
+{% load static %}
+{% comment %}
+  ServizDesk Lite sidebar.
+
+  Tier-aware visibility per LITE_DECISIONS.md §H: the nav lists every feature
+  the product supports across tiers, and hides items not available in the
+  current tenant's tier. For Lite-only deployments (this repo), we list
+  Lite-scoped items directly. Higher-tier items get wrapped in
+  tier_has_feature checks when multi-tier support is wired in.
+
+  Accessibility (per LITE_DECISIONS.md §E):
+    - <aside> with aria-label gives the sidebar a labeled landmark.
+    - Active nav items use aria-current="page" (semantic), styled by CSS
+      via .sd-nav-item[aria-current="page"].
+    - Decorative Lucide icons get aria-hidden="true" because the adjacent
+      text label provides the accessible name.
+    - The Settings accordion uses aria-expanded + aria-controls.
+    - The brand mark image uses descriptive alt; initials fallback is
+      decorative (text content already in the heading).
+
+  Context variables used:
+    active_nav       — slug matching one of the nav items ('dashboard', 'customers', ...)
+    is_admin         — bool, gates Settings section
+    is_system_user   — bool, gates ServizDesk staff admin link
+    request.user     — for the footer user block
+    role             — string label, defaults to "User"
+    tenant_name      — company display name (TenantPreference.company_name)
+    company_logo_url — uploaded company logo (TenantPreference.company_logo)
+    tier_label       — tenant tier label ("Lite"/"Plus"/"Pro"/"Enterprise")
+{% endcomment %}
+<aside class="sd-sidebar" aria-label="Main navigation">
+
+  <div class="sd-sidebar-brand">
+    <div class="sd-sidebar-brand-row">
+      <div class="sd-sidebar-brand-mark{% if not company_logo_url %} sd-sidebar-brand-mark--initials{% endif %}"{% if not company_logo_url %} aria-hidden="true"{% endif %}>
+        {% if company_logo_url %}
+          <img src="{{ company_logo_url }}" alt="{{ tenant_name }} logo">
+        {% else %}
+          {{ tenant_name|slice:":2"|upper }}
+        {% endif %}
+      </div>
+      <div class="sd-sidebar-brand-name">{{ tenant_name }}</div>
+    </div>
+    <div class="sd-sidebar-brand-subtitle">ServizDesk {{ tier_label|default:"Lite" }}</div>
+  </div>
+
+  <nav class="sd-sidebar-nav" aria-label="Primary navigation">
+
+    {# Primary — core Lite pipeline (spec §3 plus Requests as a top-level shortcut) #}
+    <a class="sd-nav-item" href="{% url 'home' %}"{% if active_nav == 'dashboard' %} aria-current="page"{% endif %}>
+      <i data-lucide="layout-dashboard" aria-hidden="true"></i> Dashboard
+    </a>
+    <a class="sd-nav-item" href="{% url 'customers' %}"{% if active_nav == 'customers' %} aria-current="page"{% endif %}>
+      <i data-lucide="users" aria-hidden="true"></i> Customers
+    </a>
+    <a class="sd-nav-item" href="{% url 'assets' %}"{% if active_nav == 'assets' %} aria-current="page"{% endif %}>
+      <i data-lucide="box" aria-hidden="true"></i> Assets
+    </a>
+    <a class="sd-nav-item" href="{% url 'jobs' %}"{% if active_nav == 'jobs' %} aria-current="page"{% endif %}>
+      <i data-lucide="clipboard-list" aria-hidden="true"></i> Jobs
+    </a>
+    <a class="sd-nav-item" href="{% url 'requests' %}"{% if active_nav == 'requests' %} aria-current="page"{% endif %}>
+      <i data-lucide="inbox" aria-hidden="true"></i> Requests
+    </a>
+    <a class="sd-nav-item" href="{% url 'schedule' %}"{% if active_nav == 'schedule' %} aria-current="page"{% endif %}>
+      <i data-lucide="calendar" aria-hidden="true"></i> Schedule
+    </a>
+    <a class="sd-nav-item" href="{% url 'quotes' %}"{% if active_nav == 'quotes' %} aria-current="page"{% endif %}>
+      <i data-lucide="file-text" aria-hidden="true"></i> Quotes
+    </a>
+    <a class="sd-nav-item" href="{% url 'invoices' %}"{% if active_nav == 'invoices' %} aria-current="page"{% endif %}>
+      <i data-lucide="receipt" aria-hidden="true"></i> Invoices
+    </a>
+    <a class="sd-nav-item" href="{% url 'payments' %}"{% if active_nav == 'payments' %} aria-current="page"{% endif %}>
+      <i data-lucide="credit-card" aria-hidden="true"></i> Payments
+    </a>
+
+    <div class="sd-sidebar-divider" aria-hidden="true"></div>
+
+    {# Secondary — supporting Lite features #}
+    <a class="sd-nav-item" href="#"{% if active_nav == 'tasks' %} aria-current="page"{% endif %}>
+      <i data-lucide="check-square" aria-hidden="true"></i> Tasks
+    </a>
+    <a class="sd-nav-item" href="#"{% if active_nav == 'time' %} aria-current="page"{% endif %}>
+      <i data-lucide="clock" aria-hidden="true"></i> Time Tracking
+    </a>
+    <a class="sd-nav-item" href="#"{% if active_nav == 'products' %} aria-current="page"{% endif %}>
+      <i data-lucide="package" aria-hidden="true"></i> Products &amp; Services
+    </a>
+
+    {% comment %}
+      Higher-tier items (Plus/Pro/Enterprise) are added here later, each
+      wrapped in a tier_has_feature check. Examples:
+        - Leads, Opportunities (Plus sales pipeline)
+        - Preventative Maintenance (Plus)
+        - Workflows, Agreements, Safety Forms (Pro)
+        - Inventory, Purchasing, Vendors, Warehouses (Pro/Enterprise)
+        - Fleet, Procurement, RMAs (Enterprise)
+    {% endcomment %}
+
+  </nav>
+
+  {% if is_admin or is_system_user %}
+  <div class="sd-sidebar-footer">
+    {# Settings accordion. Auto-expands when the user is on a settings page so the active item stays visible. #}
+    <button class="sd-sidebar-accordion-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#sd-settings-section"
+            aria-expanded="{% if active_nav == 'tenant-preferences' or active_nav == 'users' or active_nav == 'admin' %}true{% else %}false{% endif %}"
+            aria-controls="sd-settings-section">
+      <i data-lucide="settings" class="sd-accordion-icon" aria-hidden="true"></i>
+      <span class="sd-accordion-label">Settings</span>
+      <i data-lucide="chevron-down" class="sd-accordion-chevron" aria-hidden="true"></i>
+    </button>
+    <div class="collapse{% if active_nav == 'tenant-preferences' or active_nav == 'users' or active_nav == 'admin' %} show{% endif %}" id="sd-settings-section">
+      <a class="sd-nav-item sd-nav-item--nested" href="{% url 'tenant-preferences' %}"{% if active_nav == 'tenant-preferences' %} aria-current="page"{% endif %}>
+        <i data-lucide="building-2" aria-hidden="true"></i> Company Settings
+      </a>
+      <a class="sd-nav-item sd-nav-item--nested" href="{% url 'employees' %}"{% if active_nav == 'users' %} aria-current="page"{% endif %}>
+        <i data-lucide="user-cog" aria-hidden="true"></i> Users
+      </a>
+      {% if is_system_user %}
+      <a class="sd-nav-item sd-nav-item--nested" href="{% url 'admin:index' %}"{% if active_nav == 'admin' %} aria-current="page"{% endif %}>
+        <i data-lucide="shield" aria-hidden="true"></i> Django Admin
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="sd-sidebar-user">
+    {# TODO: link to user-preferences route once built (Phase 8.3 deliverable). #}
+    <a href="#" class="sd-sidebar-user-button" title="User Preferences" aria-label="User Preferences">
+      <div class="sd-sidebar-user-avatar" aria-hidden="true">{{ request.user.username|slice:":2"|upper }}</div>
+      <div class="flex-grow-1 text-truncate">
+        <div class="sd-sidebar-user-name text-truncate">{{ request.user.get_full_name|default:request.user.username }}</div>
+        <div class="sd-sidebar-user-role text-truncate">{{ role|default:"User" }}</div>
+      </div>
+    </a>
+    <a class="sd-util-btn" href="{% url 'logout' %}" title="Sign Out" aria-label="Sign Out" style="color:#cbd5e1;">
+      <i data-lucide="log-out" aria-hidden="true"></i>
+    </a>
+  </div>
+
+</aside>

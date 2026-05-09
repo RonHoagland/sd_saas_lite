@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% comment %}
+  Admin scaffolding — single user detail with inline-edit Account card,
+  Roles assignment, sidebar with avatar / org / audit info.
+  Phase 8.3 (User Management) replaces this with the spec-aligned UI.
+{% endcomment %}
+
+{% block title %}{{ emp.person }} · ServizDesk Lite{% endblock %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'employees' %}">Users</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">{{ emp.person }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4" style="max-width:1400px;">
+
+  {# Page header #}
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{% url 'employees' %}" class="sd-util-btn" title="Back to Users" aria-label="Back to Users">
+      <i data-lucide="arrow-left"></i>
+    </a>
+    <div class="flex-grow-1">
+      <h1 class="h4 fw-semibold text-body-emphasis mb-0">{{ emp.person }}</h1>
+      <div class="small text-body-secondary">
+        {{ emp.position.title|default:"No position" }}{% if emp.department %} · {{ emp.department.name }}{% endif %}
+      </div>
+    </div>
+    <div>
+      {% if emp.status == "Active" %}
+        <span class="badge bg-success-subtle text-success-emphasis">Active</span>
+      {% else %}
+        <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ emp.status }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if messages %}
+  <div id="msg-container" class="mb-3">
+    {% for msg in messages %}
+    <div class="alert {% if msg.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} d-flex align-items-center justify-content-between py-2 px-3 small msg-banner" role="alert">
+      <span>{{ msg }}</span>
+      <button type="button" class="btn-close btn-close-sm" aria-label="Dismiss"
+              onclick="this.closest('.msg-banner').remove()"></button>
+    </div>
+    {% endfor %}
+  </div>
+  <script nonce="{{ request.csp_nonce }}">
+    (function () {
+      document.querySelectorAll('#msg-container .msg-banner').forEach(function (el) {
+        setTimeout(function () {
+          el.style.transition = 'opacity 0.4s';
+          el.style.opacity = '0';
+          setTimeout(function () { el.remove(); }, 400);
+        }, 4000);
+      });
+    })();
+  </script>
+  {% endif %}
+
+  <div class="row g-3">
+
+    {# Left column — main details (2/3) #}
+    <div class="col-12 col-lg-8">
+
+      {# Account #}
+      <div class="sd-section-card sd-section-card editable p-4 mb-3" data-card="account">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h2 class="h6 fw-semibold text-body-secondary mb-0">Account</h2>
+          <button class="sd-util-btn sd-section-pencil-btn" data-edit-toggle title="Edit" aria-label="Edit account">
+            <i data-lucide="pencil"></i>
+          </button>
+        </div>
+
+        <div class="view-mode row g-3 small">
+          <div class="col-12 col-md-6">
+            <div class="form-label small fw-medium text-body-secondary mb-1">Username</div>
+            <div>{{ emp.username }}</div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="form-label small fw-medium text-body-secondary mb-1">Email</div>
+            <div>{{ emp.email }}</div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="form-label small fw-medium text-body-secondary mb-1">Employee #</div>
+            <div>{{ emp.employee_number|default:"—" }}</div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="form-label small fw-medium text-body-secondary mb-1">Hire Date</div>
+            <div>{{ emp.hire_date|date:"M j, Y"|default:"—" }}</div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="form-label small fw-medium text-body-secondary mb-1">Tenant Admin</div>
+            <div>{% if emp.is_tenant_admin %}Yes{% else %}No{% endif %}</div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="form-label small fw-medium text-body-secondary mb-1">MFA Enabled</div>
+            <div>{% if emp.mfa_enabled %}Yes{% else %}No{% endif %}</div>
+          </div>
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="update_account" value="1" />
+          <div class="edit-mode row g-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-medium text-body-secondary" for="ed_username">Username</label>
+              <input id="ed_username" name="username" value="{{ emp.username }}" class="form-control" type="text" />
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-medium text-body-secondary" for="ed_email">Email</label>
+              <input id="ed_email" name="email" value="{{ emp.email }}" class="form-control" type="email" />
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-medium text-body-secondary" for="ed_empnum">Employee #</label>
+              <input id="ed_empnum" name="employee_number" value="{{ emp.employee_number }}" class="form-control" type="text" />
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-medium text-body-secondary" for="ed_hire">Hire Date</label>
+              <input id="ed_hire" name="hire_date" value="{{ emp.hire_date|date:'Y-m-d'|default:'' }}" class="form-control" type="date" />
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-medium text-body-secondary" for="ed_status">Status</label>
+              <select id="ed_status" name="status" class="form-select">
+                {% for val, label in status_choices %}
+                  <option value="{{ val }}" {% if emp.status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-6 d-flex align-items-end">
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="is_tenant_admin" name="is_tenant_admin" {% if emp.is_tenant_admin %}checked{% endif %} />
+                <label class="form-check-label small" for="is_tenant_admin">Tenant Admin</label>
+              </div>
+            </div>
+            <div class="col-12 d-flex justify-content-end gap-2 pt-2 border-top mt-2">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-edit-cancel>Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm" data-edit-save>Save</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {# Roles #}
+      <div class="sd-section-card p-4">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h2 class="h6 fw-semibold text-body-secondary mb-0">Roles</h2>
+          <a href="{% url 'roles' %}" class="link-brand text-decoration-none small">Manage roles</a>
+        </div>
+        {% if all_roles %}
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="update_roles" value="1" />
+          <div class="row g-2">
+            {% for role in all_roles %}
+            <div class="col-12 col-md-6">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="roles" value="{{ role.pk }}"
+                       id="role_{{ role.pk }}"
+                       {% if role.pk in assigned_role_ids %}checked{% endif %} />
+                <label class="form-check-label small" for="role_{{ role.pk }}">{{ role.name }}</label>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="pt-3">
+            <button type="submit" class="btn btn-primary btn-sm">Save Roles</button>
+          </div>
+        </form>
+        {% else %}
+          <p class="small text-body-secondary mb-0">
+            No roles defined yet. <a href="{% url 'roles' %}" class="link-brand text-decoration-none">Add roles</a>.
+          </p>
+        {% endif %}
+      </div>
+
+    </div>
+
+    {# Right column — sidebar (1/3) #}
+    <div class="col-12 col-lg-4">
+
+      {# Avatar / identity #}
+      <div class="sd-section-card p-4 mb-3 text-center">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-semibold mb-2"
+             style="height:64px;width:64px;background:var(--sd-brand-primary);font-size:20px;">
+          {{ emp.person.first_name|slice:":1" }}{{ emp.person.last_name|slice:":1" }}
+        </div>
+        <div class="fw-semibold text-body-emphasis small">{{ emp.person }}</div>
+        <div class="small text-body-secondary">{{ emp.username }}</div>
+      </div>
+
+      {# Org #}
+      <div class="sd-section-card p-4 mb-3">
+        <h2 class="h6 fw-semibold text-body-secondary mb-3">Organisation</h2>
+        <div class="small">
+          <div class="mb-2">
+            <div class="form-label small fw-medium text-body-secondary mb-1">Department</div>
+            <div>{{ emp.department.name|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="form-label small fw-medium text-body-secondary mb-1">Position</div>
+            <div>{{ emp.position.title|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+
+      {# Audit #}
+      <div class="sd-section-card p-4">
+        <h2 class="h6 fw-semibold text-body-secondary mb-3">Record Info</h2>
+        <div class="small text-body-secondary">
+          <div>Created {{ emp.created_on|date:"M j, Y" }} by {{ emp.created_by|default:"system" }}</div>
+          <div>Updated {{ emp.updated_on|date:"M j, Y" }} by {{ emp.updated_by|default:"system" }}</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

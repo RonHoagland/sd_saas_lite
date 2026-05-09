@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.company_name|default:customer.customer_number|default:"Customer" }} · ServizDesk Lite{% endblock %}
+{% block page_title %}Customer Details{% endblock %}
+
+{% block breadcrumb %}
+  <li class="sd-breadcrumb-item"><a href="{% url 'customers' %}">Customers</a></li>
+  <li class="sd-breadcrumb-item">{{ customer.customer_number|default:customer.company_name|default:"—" }}</li>
+{% endblock %}
+
+{% block subheader %}
+  {% include "includes/_subheader_detail.html" with record_name=record_name record_meta=record_meta tags=record_tags actions=record_actions %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3 px-2" style="max-width: 1400px;">
+  <div class="sd-stack">
+
+    {% comment %}
+      Top row: Customer Info + Financial (left, 2fr) and Assets (right, 1fr).
+      Assets caps at the natural height of the left column via max_height="none"
+      — the sd-grid-2-1's align-items:stretch matches both cells.
+    {% endcomment %}
+    <div class="sd-grid-2-1">
+      <div class="sd-stack">
+
+        <div class="sd-section-card p-4">
+          <h2 class="h6 fw-semibold text-body-secondary mb-3">Customer Information</h2>
+          <dl class="row g-3 mb-0 small">
+            <div class="col-12 col-md-6">
+              <dt class="form-label small fw-medium text-body-secondary mb-1">Name</dt>
+              <dd class="mb-0">{{ customer.company_name|default:"—" }}</dd>
+            </div>
+            <div class="col-12 col-md-6">
+              <dt class="form-label small fw-medium text-body-secondary mb-1">Customer #</dt>
+              <dd class="mb-0">{{ customer.customer_number|default:"—" }}</dd>
+            </div>
+            <div class="col-12 col-md-6">
+              <dt class="form-label small fw-medium text-body-secondary mb-1">Account Type</dt>
+              <dd class="mb-0">{{ customer.account_type }}</dd>
+            </div>
+            <div class="col-12 col-md-6">
+              <dt class="form-label small fw-medium text-body-secondary mb-1">Status</dt>
+              <dd class="mb-0">{{ customer.status }}</dd>
+            </div>
+            <div class="col-12 col-md-6">
+              <dt class="form-label small fw-medium text-body-secondary mb-1">Customer Since</dt>
+              <dd class="mb-0">{{ customer.customer_since|date:"M j, Y"|default:"—" }}</dd>
+            </div>
+            <div class="col-12 col-md-6">
+              <dt class="form-label small fw-medium text-body-secondary mb-1">Assigned To</dt>
+              <dd class="mb-0">{{ customer.assigned_to.username|default:"—" }}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="sd-section-card p-4">
+          <h2 class="h6 fw-semibold text-body-secondary mb-3">Financial</h2>
+          <dl class="row g-3 mb-0 small">
+            <div class="col-12 col-md-4">
+              <dt class="form-label small fw-medium text-body-secondary mb-1">Account Terms</dt>
+              <dd class="mb-0">{{ customer.account.account_terms|default:"—" }}</dd>
+            </div>
+            <div class="col-12 col-md-4">
+              <dt class="form-label small fw-medium text-body-secondary mb-1">Credit Limit</dt>
+              <dd class="mb-0">${{ customer.account.credit_limit|floatformat:2 }}</dd>
+            </div>
+            <div class="col-12 col-md-4">
+              <dt class="form-label small fw-medium text-body-secondary mb-1">Credit Status</dt>
+              <dd class="mb-0">{{ customer.account.credit_status }}</dd>
+            </div>
+            <div class="col-12 col-md-6">
+              <dt class="form-label small fw-medium text-body-secondary mb-1">Tax Exempt</dt>
+              <dd class="mb-0">{% if customer.account.tax_exempt %}Yes{% else %}No{% endif %}</dd>
+            </div>
+            <div class="col-12 col-md-6">
+              <dt class="form-label small fw-medium text-body-secondary mb-1">Tax Rate</dt>
+              <dd class="mb-0">{% if customer.account.tax_rate %}{{ customer.account.tax_rate }}%{% else %}—{% endif %}</dd>
+            </div>
+          </dl>
+        </div>
+
+      </div>
+
+      {% comment %}
+        Right column: Assets — caps to left column height (max_height="none"
+        lets the grid's align-items:stretch drive the height; internal scroll
+        if rows exceed).
+      {% endcomment %}
+      <div>
+        {% include "blocks/_list.html" with variant="compact" title="Assets" columns=asset_columns rows=asset_rows new_record=asset_new_record heading_level=3 empty_text="No assets yet for this customer." max_height="none" %}
+      </div>
+    </div>
+
+    {% comment %}
+      Tab Panel — full width below the 2-1 row.
+      Requests / Work Orders / Quotes / Invoices / Payments / Notes / Documents.
+    {% endcomment %}
+    {% include "blocks/_tab_panel.html" with tabs=customer_tabs %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block page_footer %}
+  {% comment %}
+    Detail audit footer — Modified left, Created right. See §5.2.1.
+    The view exposes customer.created_on / updated_on / created_by / updated_by;
+    the partial expects modified_* aliases.
+  {% endcomment %}
+  {% include "includes/_footer_detail.html" with created_by=customer.created_by created_at=customer.created_on modified_by=customer.updated_by modified_at=customer.updated_on %}
+{% endblock %}
+
+{% block extra_js %}
+{% comment %}
+  Edit modal — STUB (per Ron's "stub for now" decision).
+  Form fields display current values but Save is disabled — Phase 2.4 will
+  wire CustomerForm + POST handler in customer_detail_view.
+{% endcomment %}
+<div class="modal fade" id="sd-customer-edit" tabindex="-1" aria-labelledby="sd-customer-edit-title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5 mb-0" id="sd-customer-edit-title">Edit Customer</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="" novalidate>
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="alert alert-info small mb-3" role="status">
+            <i data-lucide="info" aria-hidden="true"></i>
+            Save is not yet wired. Phase 2.4 (Customer create / edit) will activate this form.
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label for="edit-company-name" class="form-label small fw-medium">Name</label>
+              <input id="edit-company-name" name="company_name" type="text" class="form-control" value="{{ customer.company_name|default:'' }}">
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="edit-customer-number" class="form-label small fw-medium">Customer #</label>
+              <input id="edit-customer-number" name="customer_number" type="text" class="form-control" value="{{ customer.customer_number|default:'' }}" readonly>
+              <div class="form-text small">System-assigned. Lite tenants don't control numbering prefixes.</div>
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="edit-account-type" class="form-label small fw-medium">Account Type</label>
+              <select id="edit-account-type" name="account_type" class="form-select">
+                {% for value, label in customer.AccountTypeChoices.choices %}
+                  <option value="{{ value }}"{% if value == customer.account_type %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="edit-status" class="form-label small fw-medium">Status</label>
+              <select id="edit-status" name="status" class="form-select">
+                {% for value, label in customer.StatusChoices.choices %}
+                  <option value="{{ value }}"{% if value == customer.status %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="edit-customer-since" class="form-label small fw-medium">Customer Since</label>
+              <input id="edit-customer-since" name="customer_since" type="date" class="form-control" value="{{ customer.customer_since|date:'Y-m-d' }}">
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="edit-assigned-to" class="form-label small fw-medium">Assigned To</label>
+              <input id="edit-assigned-to" name="assigned_to" type="text" class="form-control" value="{{ customer.assigned_to.username|default:'' }}">
+              <div class="form-text small">Free-text for stub; Phase 2.4 swaps this for a user dropdown.</div>
+            </div>
+
+            <div class="col-12"><hr class="my-1"></div>
+
+            <div class="col-12 col-md-4">
+              <label for="edit-account-terms" class="form-label small fw-medium">Account Terms</label>
+              <input id="edit-account-terms" name="account_terms" type="text" class="form-control" value="{{ customer.account.account_terms|default:'' }}">
+            </div>
+            <div class="col-12 col-md-4">
+              <label for="edit-credit-limit" class="form-label small fw-medium">Credit Limit</label>
+              <input id="edit-credit-limit" name="credit_limit" type="number" step="0.01" class="form-control" value="{{ customer.account.credit_limit }}">
+            </div>
+            <div class="col-12 col-md-4">
+              <label for="edit-credit-status" class="form-label small fw-medium">Credit Status</label>
+              <select id="edit-credit-status" name="credit_status" class="form-select">
+                {% for value, label in customer.account.CreditStatusChoices.choices %}
+                  <option value="{{ value }}"{% if value == customer.account.credit_status %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox" id="edit-tax-exempt" name="tax_exempt"{% if customer.account.tax_exempt %} checked{% endif %}>
+                <label class="form-check-label small" for="edit-tax-exempt">Tax Exempt</label>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="edit-tax-rate" class="form-label small fw-medium">Tax Rate (%)</label>
+              <input id="edit-tax-rate" name="tax_rate" type="number" step="0.0001" class="form-control" value="{{ customer.account.tax_rate|default:'' }}">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" disabled aria-disabled="true">Save (TODO)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

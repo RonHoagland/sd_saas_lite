@@ -1,0 +1,14 @@
+{% comment %}
+Sub-header — Greeting variant. See BLOCK_REFERENCE.md §5.1.1.
+
+Used by Dashboard. Time-of-day greeting + user display name.
+
+Data contract:
+  greeting           (required)  "Good Morning" / "Good Afternoon" / "Good Evening"
+  user_display_name  (required)  First name → username fallback
+
+Both come from the servizdesk_ui context processor. Caller wraps in
+{% block subheader %}...{% endblock %}.
+{% endcomment %}<div class="sd-subheader">
+  <p class="sd-greeting">{{ greeting }}, {{ user_display_name }}</p>
+</div>

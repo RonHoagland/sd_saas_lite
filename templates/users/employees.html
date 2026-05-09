@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% comment %}
+  Admin scaffolding — list of tenant Users.
+  Phase 8.3 (User Management) replaces this with the spec-aligned UI.
+{% endcomment %}
+
+{% block title %}Users · ServizDesk Lite{% endblock %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">Users</span>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4" style="max-width:1400px;">
+
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="d-flex align-items-center gap-2">
+      <a href="{% url 'home' %}" class="sd-util-btn" title="Back to Home" aria-label="Back to Home">
+        <i data-lucide="arrow-left"></i>
+      </a>
+      <h1 class="h4 fw-semibold text-body-emphasis mb-0">Users</h1>
+    </div>
+    <a href="#" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+      <i data-lucide="plus"></i> New User
+    </a>
+  </div>
+
+  <div class="sd-section-card overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light">
+          <tr>
+            <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Name</th>
+            <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Username</th>
+            <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Email</th>
+            <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Department</th>
+            <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Position</th>
+            <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for emp in employees %}
+          <tr>
+            <td>
+              <a href="{% url 'employee-detail' emp.pk %}" class="link-brand text-decoration-none fw-medium">{{ emp.person }}</a>
+            </td>
+            <td class="text-body-secondary">{{ emp.username }}</td>
+            <td class="text-body-secondary">{{ emp.email }}</td>
+            <td class="text-body-secondary">{{ emp.department.name|default:"—" }}</td>
+            <td class="text-body-secondary">{{ emp.position.title|default:"—" }}</td>
+            <td>
+              {% if emp.status == "Active" %}
+                <span class="badge bg-success-subtle text-success-emphasis">Active</span>
+              {% else %}
+                <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ emp.status }}</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a href="{% url 'employee-detail' emp.pk %}" class="link-brand text-decoration-none small">View</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center text-body-secondary py-5">No users found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

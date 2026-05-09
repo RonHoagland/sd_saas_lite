@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Customers · ServizDesk Lite{% endblock %}
+{% block page_title %}Customers{% endblock %}
+
+{% block breadcrumb %}
+  <li class="sd-breadcrumb-item">Customers</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3 px-2" style="max-width: 1400px;">
+  {% include "blocks/_list.html" with variant="full" title="Customers" columns=columns rows=rows new_record=new_record filters=filters search=search pagination=pagination current_sort=current_sort empty_text="No customers match the current filters." %}
+</div>
+{% endblock %}

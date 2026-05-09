@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% comment %}
+  Master template for entity section pages (Customers, Assets, Jobs, Requests,
+  Schedule, Quotes, Invoices, Payments — both list and detail).
+
+  Provides a consistent shell:
+    - <title> tag derived from `section_title`
+    - Page heading (h1) derived from `section_title` or {% block section_heading %}
+    - Optional subtitle slot under the heading
+    - Action buttons slot top-right (e.g., "+ New Customer")
+    - Body slot for the page-specific content
+
+  Children typically override:
+    {% block section_actions %}…{% endblock %}
+    {% block section_body %}…{% endblock %}
+    {% block breadcrumb %}…{% endblock %}   (defined in base.html)
+
+  Children either:
+    - Pass `section_title` in view context (simplest), OR
+    - Override {% block section_heading %} for richer markup (badges, links).
+{% endcomment %}
+
+{% block title %}{{ section_title|default:"ServizDesk" }} · ServizDesk Lite{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4" style="max-width:1400px;">
+
+  <div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-2">
+    <div class="min-w-0">
+      <h1 class="h4 fw-semibold text-body-emphasis mb-0">
+        {% block section_heading %}{{ section_title|default:"ServizDesk" }}{% endblock %}
+      </h1>
+      {% block section_subtitle %}{% endblock %}
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      {% block section_actions %}{% endblock %}
+    </div>
+  </div>
+
+  {% block section_body %}{% endblock %}
+
+</div>
+{% endblock %}

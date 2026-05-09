@@ -1,0 +1,193 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}ServizDesk Lite{% endblock %}</title>
+
+  {% comment %}Bootstrap 5 + Lucide + site overrides — all vendored (see static/vendor/). Rationale: app must run behind firewalls with no outbound internet.{% endcomment %}
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-5.3.3/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}?v={{ SERVIZDESK_UI_ASSET_VERSION }}">
+  <script defer src="{% static 'vendor/bootstrap-5.3.3/js/bootstrap.bundle.min.js' %}"></script>
+  <script defer src="{% static 'vendor/lucide-0.469.0/lucide.min.js' %}"></script>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  {% comment %}
+    Skip-to-content link (a11y / WCAG 2.4.1). First focusable element on every
+    authenticated page; jumps Tab focus past the sidebar and topbar straight
+    to <main>. Hidden offscreen until focused.
+  {% endcomment %}
+  <a href="#main-content" class="sd-skip-link">Skip to main content</a>
+
+  {# Drawer — reusable Bootstrap offcanvas. Populate via ServizDesk.openDrawer(title, subtitle, bodyHTML). #}
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="sd-drawer" aria-labelledby="sd-drawer-title">
+    <div class="offcanvas-header border-bottom">
+      <div>
+        <h5 class="offcanvas-title mb-0" id="sd-drawer-title">Edit</h5>
+        <div class="text-muted small" id="sd-drawer-subtitle"></div>
+      </div>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body" id="sd-drawer-body"></div>
+    <div class="offcanvas-footer border-top d-flex justify-content-end gap-2 p-3">
+      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancel</button>
+      <button type="button" class="btn btn-primary" data-drawer-save>
+        <i data-lucide="check" aria-hidden="true"></i> Save Changes
+      </button>
+    </div>
+  </div>
+
+  <div class="sd-app-shell">
+
+    {# Sidebar — tier-aware via context variables (is_admin, tier, etc.) #}
+    {% include "includes/app_sidebar.html" %}
+
+    <div class="sd-right-pane">
+
+      {% comment %}
+        Topbar — 3-column grid:
+          Left   — live date/time (row 1) + breadcrumb (row 2)
+          Center — page title (large, prominent — page archetype name)
+          Right  — search + bell + help
+
+        The page <h1> lives in the center column (sd-page-title). Pages set:
+          {% block page_title %}Customer Details{% endblock %}
+          {% block breadcrumb %} ... {% endblock %}
+        See app_sidebar.html for the tenant-name + branding (moved out of topbar).
+      {% endcomment %}
+      <header class="sd-topbar">
+        <div class="sd-topbar-left">
+          <div class="sd-topbar-datetime" data-live-datetime aria-live="off">{{ current_datetime_long }}</div>
+          <nav class="sd-topbar-breadcrumb" aria-label="Breadcrumb">
+            <ol class="sd-breadcrumb-list">
+              {% block breadcrumb %}{% endblock %}
+            </ol>
+          </nav>
+        </div>
+        <div class="sd-topbar-center">
+          <h1 class="sd-page-title">{% block page_title %}{% endblock %}</h1>
+        </div>
+        <div class="sd-topbar-right">
+          <div class="sd-topbar-search">
+            <i data-lucide="search" aria-hidden="true"></i>
+            <input type="search" placeholder="Search customers, jobs, invoices…" aria-label="Search" />
+          </div>
+          <button class="sd-util-btn" title="Notifications" aria-label="Notifications">
+            <i data-lucide="bell" aria-hidden="true"></i>
+            <span class="sd-util-btn-dot" aria-hidden="true"></span>
+          </button>
+          <button class="sd-util-btn" title="Help" aria-label="Help">
+            <i data-lucide="help-circle" aria-hidden="true"></i>
+          </button>
+        </div>
+      </header>
+
+      {% comment %}
+        Sub-header — transparent strip between topbar and main. Per-page opt-in:
+        empty by default, Dashboard fills it with the time-of-day greeting.
+        Pages with their own heading/intro section can also use this.
+      {% endcomment %}
+      {% block subheader %}{% endblock %}
+
+      <main class="sd-main" id="main-content" tabindex="-1">
+        {% block content %}{% endblock %}
+
+        {% comment %}
+          Page footer — archetype chrome. Currently used by the Detail
+          archetype for the audit footer (§5.2.1). Pages opt in by filling
+          this block; otherwise it renders nothing.
+        {% endcomment %}
+        {% block page_footer %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <script nonce="{{ request.csp_nonce }}">
+    // ServizDesk shell helpers. Kept intentionally small; page-specific behavior
+    // belongs in the per-page extra_js block or a page module.
+    window.ServizDesk = window.ServizDesk || {};
+
+    ServizDesk.openDrawer = function (title, subtitle, bodyHTML) {
+      document.getElementById('sd-drawer-title').textContent = title || 'Edit';
+      document.getElementById('sd-drawer-subtitle').textContent = subtitle || '';
+      document.getElementById('sd-drawer-body').innerHTML = bodyHTML || '';
+      var el = document.getElementById('sd-drawer');
+      bootstrap.Offcanvas.getOrCreateInstance(el).show();
+      if (window.lucide) lucide.createIcons();
+    };
+    ServizDesk.closeDrawer = function () {
+      var el = document.getElementById('sd-drawer');
+      var oc = bootstrap.Offcanvas.getInstance(el);
+      if (oc) oc.hide();
+    };
+
+    // Live date/time in the topbar. Server renders the initial value; this
+    // takes over and ticks every minute, synced to the actual minute boundary
+    // so the visible value flips when real-world clocks flip.
+    function sdFormatDateTimeLong(d) {
+      var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      var hour = d.getHours();
+      var ampm = hour >= 12 ? 'PM' : 'AM';
+      hour = hour % 12 || 12;
+      var min = String(d.getMinutes()).padStart(2, '0');
+      return days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear() + ' · ' + hour + ':' + min + ' ' + ampm;
+    }
+    function sdTickDateTime() {
+      var els = document.querySelectorAll('[data-live-datetime]');
+      if (!els.length) return;
+      var now = new Date();
+      var formatted = sdFormatDateTimeLong(now);
+      els.forEach(function (el) { el.textContent = formatted; });
+    }
+
+    function sdInit() {
+      // Inline-edit pattern (section-card with pencil). Single delegated listener.
+      document.addEventListener('click', function (e) {
+        var pencil = e.target.closest('[data-edit-toggle]');
+        if (pencil) {
+          var card = pencil.closest('.sd-section-card');
+          if (!card) return;
+          document.querySelectorAll('.sd-section-card.editing').forEach(function (c) {
+            if (c !== card) c.classList.remove('editing');
+          });
+          card.classList.add('editing');
+          var first = card.querySelector('.edit-mode input, .edit-mode select, .edit-mode textarea');
+          if (first && !first.readOnly) first.focus();
+          return;
+        }
+        var cancel = e.target.closest('[data-edit-cancel]');
+        if (cancel) {
+          var cancelCard = cancel.closest('.sd-section-card');
+          if (cancelCard) cancelCard.classList.remove('editing');
+          return;
+        }
+        var save = e.target.closest('[data-edit-save]');
+        if (save) {
+          var saveCard = save.closest('.sd-section-card');
+          if (saveCard) saveCard.classList.remove('editing');
+        }
+      });
+
+      // Sync the date/time tick to the next minute boundary, then tick every 60s.
+      var msUntilNextMinute = (60 - new Date().getSeconds()) * 1000;
+      setTimeout(function () {
+        sdTickDateTime();
+        setInterval(sdTickDateTime, 60000);
+      }, msUntilNextMinute);
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', sdInit);
+    } else {
+      sdInit();
+    }
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

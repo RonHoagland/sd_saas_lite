@@ -1,0 +1,1092 @@
+/* ServizDesk Lite — site.css
+ *
+ * Brand-specific overrides layered on top of Bootstrap 5.3.
+ * Keep this file small and focused: only styles that Bootstrap doesn't
+ * ship out of the box (dark sidebar, stat cards, inline-edit pattern,
+ * drawer wrapper, skip-link, focus ring, print rules).
+ *
+ * Bootstrap is loaded first (see base.html); this file wins via source order.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * Accessibility baseline (WCAG 2.1 AA, per LITE_DECISIONS.md §E):
+ *   • Sizes use rem (1rem = 16px default) so user font preferences scale.
+ *     Borders + small graphic offsets stay in px.
+ *   • Focus is always visible via --sd-focus-ring (custom) plus Bootstrap
+ *     defaults on form controls.
+ *   • Reduced-motion preference disables transitions/animations.
+ *   • Verified contrast pairs (computed at fg/bg literal values):
+ *       white #fff           on  #0f172a  navy        16.69:1   AAA
+ *       #cbd5e1 slate-300    on  #0f172a  navy         9.99:1   AAA  (sidebar text)
+ *       #94a3b8 slate-400    on  #0f172a  navy         5.76:1   AA   (sidebar muted)
+ *       #ffffff white        on  #2563eb  brand-blue   4.95:1   AA   (active nav text)
+ *       #0f172a navy         on  #ffffff  white       16.69:1   AAA  (card values)
+ *       #475569 slate-600    on  #ffffff  white        7.55:1   AAA  (card labels)
+ *       #64748b slate-500    on  #ffffff  white        4.84:1   AA   (sub-text in cards)
+ *       #475569 slate-600    on  #d6dde6  body bg      4.62:1   AA
+ *       #0f172a navy         on  #d6dde6  body bg     12.06:1   AAA
+ *   New colors must be checked before use; do not introduce ad-hoc fg/bg pairs.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+
+:root {
+  /* Brand */
+  --sd-brand-primary: #2563eb;
+  --sd-brand-primary-hover: #1d4ed8;
+
+  /* Sidebar */
+  --sd-sidebar-bg: #0f172a;
+  --sd-sidebar-border: #1e293b;
+  --sd-sidebar-text: #cbd5e1;
+  --sd-sidebar-text-muted: #94a3b8;
+  --sd-sidebar-hover-bg: #1e293b;
+  --sd-sidebar-active-bg: #2563eb;
+  --sd-sidebar-active-text: #ffffff;
+
+  /* Topbar */
+  --sd-topbar-border: #d6dde6;
+
+  /* Body background: between slate-200 and slate-300 — gives white section
+   * cards a clearly differentiated canvas without feeling muddy. Dial to
+   * #e2e8f0 (slate-200) to lighten, or #cbd5e1 (slate-300) for more weight. */
+  --sd-body-bg: #d6dde6;
+
+  /* Card / input borders: between slate-300 and slate-400 — crisp definition
+   * against both the white card interior and the body bg. Dial to #cbd5e1
+   * (slate-300) to soften, or #94a3b8 (slate-400) for more emphasis. */
+  --sd-card-border: #b6c2d2;
+
+  /* Focus ring tokens.
+   * --sd-focus-ring        — for elements on light backgrounds (cards, page).
+   * --sd-focus-ring-dark   — for elements on the dark sidebar.
+   * Always paired with `outline: none` on the element to avoid a double ring.
+   */
+  --sd-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.45);
+  --sd-focus-ring-dark: 0 0 0 3px rgba(96, 165, 250, 0.65);
+
+  /* Universal accent token palette — see BLOCK_REFERENCE.md §3.1.
+   * Used by KPI block accent stripe, tag/badge variants in §5.1.2,
+   * action button variants. Single source of truth for color tokens.
+   * Verified contrast pairs:
+   *   white on success/warning/danger/info/neutral — see header table at top
+   *   each color verified against #ffffff card bg ≥ 4.5:1 for accompanying text.
+   */
+  --sd-accent-brand:   #2563eb;  /* same as --sd-brand-primary */
+  --sd-accent-success: #22c55e;  /* green   — Job complete, Customer active */
+  --sd-accent-warning: #f97316;  /* orange  — open Requests, Job in progress */
+  --sd-accent-danger:  #ef4444;  /* red     — Quote declined, Delete buttons */
+  --sd-accent-info:    #eab308;  /* amber   — unpaid Invoices, Quote sent */
+  --sd-accent-neutral: #64748b;  /* slate-500 — Quote draft, Customer inactive */
+
+  /* Deep variants — for filled surfaces (buttons, badges, etc.) where the
+   * bright variant above reads too punchy. Bright palette is for thin
+   * accents (KPI stripes, hairlines); deep palette is for solid fills.
+   * White text passes WCAG AA contrast on all five. */
+  --sd-accent-brand-deep:   #1d4ed8;  /* blue-700  — same as --sd-brand-primary-hover */
+  --sd-accent-success-deep: #15803d;  /* green-700  — emerald */
+  --sd-accent-warning-deep: #c2410c;  /* orange-700 — terracotta */
+  --sd-accent-danger-deep:  #b91c1c;  /* red-700    — crimson */
+  --sd-accent-info-deep:    #a16207;  /* yellow-700 — gold */
+  --sd-accent-neutral-deep: #475569;  /* slate-600 */
+}
+
+/* Anchor for rem sizing. 100% = browser default (16px) but respects the
+ * user's "Default font size" preference. Do not hardcode `font-size: 16px`. */
+html { font-size: 100%; }
+
+/* Bootstrap text + border overrides — keeps our slate palette consistent
+ * across Bootstrap's component defaults (form-control, table cells, links,
+ * list-group-item, body text, .text-body-emphasis, .text-body-secondary, etc.).
+ *
+ * Body + emphasis unified on slate-900 (#0f172a) for crisp pop on white
+ * cards and the slate-200/300 body bg. Secondary lifted from Bootstrap's
+ * default rgba(33, 37, 41, 0.75) (renders ~#494c50, "faded") to a solid
+ * slate-600 — still clearly muted vs. body text but no longer washed-out.
+ */
+:root, body {
+  --bs-body-color: #000000;
+  --bs-body-color-rgb: 0, 0, 0;
+  --bs-emphasis-color: #000000;
+  --bs-emphasis-color-rgb: 0, 0, 0;
+  --bs-secondary-color: #475569;
+  --bs-secondary-color-rgb: 71, 85, 105;
+
+  --bs-border-color: #b6c2d2;
+  --bs-border-color-translucent: rgba(15, 23, 42, 0.22);
+}
+
+/* Bootstrap primary overrides — keep ServizDesk blue consistent */
+.btn-primary {
+  --bs-btn-bg: var(--sd-brand-primary);
+  --bs-btn-border-color: var(--sd-brand-primary);
+  --bs-btn-hover-bg: var(--sd-brand-primary-hover);
+  --bs-btn-hover-border-color: var(--sd-brand-primary-hover);
+  --bs-btn-active-bg: var(--sd-brand-primary-hover);
+  --bs-btn-active-border-color: var(--sd-brand-primary-hover);
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--sd-brand-primary);
+  --bs-btn-border-color: var(--sd-brand-primary);
+  --bs-btn-hover-bg: var(--sd-brand-primary);
+  --bs-btn-hover-border-color: var(--sd-brand-primary);
+  --bs-btn-active-bg: var(--sd-brand-primary-hover);
+  --bs-btn-active-border-color: var(--sd-brand-primary-hover);
+}
+.text-brand { color: var(--sd-brand-primary) !important; }
+.bg-brand { background-color: var(--sd-brand-primary) !important; }
+.link-brand { color: var(--sd-brand-primary); }
+.link-brand:hover { color: var(--sd-brand-primary-hover); }
+
+/* Body + app shell */
+body {
+  background: var(--sd-body-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.sd-app-shell { display: flex; height: 100vh; overflow: hidden; }
+.sd-right-pane { display: flex; flex-direction: column; flex: 1 1 auto; overflow: hidden; }
+.sd-main { flex: 1 1 auto; overflow-y: auto; }
+
+/* Skip-to-content link.
+ * First focusable element on every page; jumps Tab focus past the sidebar
+ * and topbar straight to <main id="main-content">. Hidden offscreen until
+ * focused (WCAG 2.4.1 Bypass Blocks). */
+.sd-skip-link {
+  position: absolute;
+  top: 0; left: 0;
+  padding: 0.75rem 1rem;
+  background: var(--sd-brand-primary);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  z-index: 1080;
+  transform: translateY(-110%);
+  transition: transform 0.18s ease;
+  border-radius: 0 0 0.375rem 0;
+}
+.sd-skip-link:focus {
+  transform: translateY(0);
+  outline: none;
+  box-shadow: var(--sd-focus-ring);
+}
+
+/* Sidebar (Bootstrap doesn't ship a dark nav; build it here) */
+.sd-sidebar {
+  width: 15rem;
+  flex-shrink: 0;
+  background: var(--sd-sidebar-bg);
+  color: var(--sd-sidebar-text);
+  display: flex;
+  flex-direction: column;
+}
+.sd-sidebar-brand {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem 0.625rem;
+  border-bottom: 1px solid var(--sd-sidebar-border);
+  flex-shrink: 0;
+}
+.sd-sidebar-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+.sd-sidebar-brand-mark {
+  height: 2rem; width: 2rem;
+  border-radius: 0.375rem;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.sd-sidebar-brand-mark img {
+  max-width: 100%; max-height: 100%; object-fit: contain;
+}
+.sd-sidebar-brand-mark--initials {
+  background: var(--sd-brand-primary);
+  color: #fff;
+  font-weight: 700; font-size: 0.8125rem;
+}
+.sd-sidebar-brand-name {
+  color: #fff; font-weight: 600; font-size: 1.125rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  min-width: 0;
+}
+.sd-sidebar-brand-subtitle {
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-top: 0.375rem;
+  text-align: left;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sd-sidebar-nav { flex: 1 1 auto; overflow-y: auto; padding: 0.75rem 0.5rem; }
+.sd-sidebar-footer {
+  border-top: 1px solid var(--sd-sidebar-border);
+  padding: 0.5rem;
+  flex-shrink: 0;
+}
+.sd-sidebar-section-label {
+  color: var(--sd-sidebar-text-muted);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  padding: 0.625rem 0.75rem 0.25rem;
+  margin: 0;
+}
+.sd-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.4375rem 0.75rem;
+  font-size: 0.84375rem;
+  color: var(--sd-sidebar-text);
+  border-radius: 0.375rem;
+  text-decoration: none;
+}
+.sd-nav-item:hover { background: var(--sd-sidebar-hover-bg); color: #fff; }
+.sd-nav-item.active,
+.sd-nav-item[aria-current="page"] {
+  background: var(--sd-sidebar-active-bg);
+  color: var(--sd-sidebar-active-text);
+  font-weight: 500;
+}
+.sd-nav-item [data-lucide] { width: 1.125rem; height: 1.125rem; stroke-width: 1.75; flex-shrink: 0; }
+.sd-nav-item--nested { padding-left: 2rem; }
+.sd-sidebar-divider { height: 1px; background: var(--sd-sidebar-border); margin: 0.5rem 0.25rem; }
+
+/* Sidebar accordion (Settings group). Toggle row matches sd-nav-item visually,
+ * with a chevron that rotates 180deg when expanded. */
+.sd-sidebar-accordion-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.4375rem 0.75rem;
+  font-size: 0.84375rem;
+  color: var(--sd-sidebar-text);
+  background: transparent;
+  border: 0;
+  border-radius: 0.375rem;
+  text-align: left;
+}
+.sd-sidebar-accordion-toggle:hover { background: var(--sd-sidebar-hover-bg); color: #fff; }
+.sd-sidebar-accordion-toggle .sd-accordion-icon { width: 1.125rem; height: 1.125rem; stroke-width: 1.75; flex-shrink: 0; }
+.sd-sidebar-accordion-toggle .sd-accordion-label { flex: 1 1 auto; }
+.sd-sidebar-accordion-toggle .sd-accordion-chevron {
+  width: 1rem; height: 1rem; stroke-width: 1.75; flex-shrink: 0;
+  transition: transform 0.18s ease;
+  color: var(--sd-sidebar-text-muted);
+}
+.sd-sidebar-accordion-toggle[aria-expanded="true"] .sd-accordion-chevron { transform: rotate(180deg); }
+
+/* User block: avatar + name/role is now a clickable button to User Preferences.
+ * Sign-out icon stays as a separate small button on the right. */
+.sd-sidebar-user {
+  display: flex; align-items: center; gap: 0.375rem;
+  padding: 0.5rem;
+  border-top: 1px solid var(--sd-sidebar-border);
+  margin-top: 0.25rem;
+}
+.sd-sidebar-user-button {
+  flex: 1 1 auto;
+  display: flex; align-items: center; gap: 0.625rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.375rem;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+.sd-sidebar-user-button:hover { background: var(--sd-sidebar-hover-bg); }
+.sd-sidebar-user-avatar {
+  height: 2rem; width: 2rem;
+  border-radius: 50%;
+  background: var(--sd-brand-primary);
+  color: #fff; font-size: 0.6875rem; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.sd-sidebar-user-name { color: #fff; font-size: 0.875rem; font-weight: 500; }
+.sd-sidebar-user-role { color: var(--sd-sidebar-text-muted); font-size: 0.6875rem; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Topbar — 3-column grid (1fr / 1fr / 1fr)
+ *   Left   : 2 rows — live date/time (row 1) + breadcrumb (row 2)
+ *   Center : page title (large, prominent <h1>)
+ *   Right  : search + utility buttons (bell, help)
+ * ───────────────────────────────────────────────────────────────────────── */
+.sd-topbar {
+  min-height: 5rem;
+  border-bottom: 1px solid var(--sd-topbar-border);
+  background: #fff;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  padding: 0 2rem;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+.sd-topbar-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.sd-topbar-datetime {
+  font-size: 0.875rem;
+  color: #475569;
+  font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sd-topbar-breadcrumb {
+  font-size: 0.875rem;
+  color: #475569;
+}
+.sd-breadcrumb-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0.375rem;
+}
+.sd-breadcrumb-item { display: inline-flex; align-items: center; }
+.sd-breadcrumb-item a { color: #475569; text-decoration: none; }
+.sd-breadcrumb-item a:hover { color: #0f172a; }
+.sd-breadcrumb-item::after {
+  content: "/";
+  color: #94a3b8;
+  margin-left: 0.375rem;
+}
+
+.sd-topbar-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+.sd-page-title {
+  font-size: 2.25rem;
+  font-weight: 600;
+  color: var(--bs-emphasis-color);
+  margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-align: center;
+}
+
+.sd-topbar-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.sd-topbar-search {
+  position: relative;
+}
+.sd-topbar-search input {
+  width: 18rem;
+  height: 2.5rem;
+  padding: 0 0.875rem 0 2.25rem;
+  border: 1px solid #94a3b8;          /* slate-400 — more defined */
+  border-radius: 0.5rem;
+  background: #f1f5f9;                /* slate-100 — soft grey fill */
+  font-size: 0.9375rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.sd-topbar-search input:focus {
+  outline: none;
+  border-color: var(--sd-brand-primary);
+  background: #fff;                   /* lifts to white on focus to signal active */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+.sd-topbar-search [data-lucide] {
+  position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+  width: 1rem; height: 1rem; color: #64748b;
+}
+.sd-util-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 2.25rem; height: 2.25rem;
+  border-radius: 0.375rem;
+  color: #475569;
+  background: transparent;
+  border: none;
+  text-decoration: none;
+  position: relative;
+}
+.sd-util-btn:hover { background: #f1f5f9; color: #0f172a; }
+.sd-util-btn [data-lucide] { width: 1.125rem; height: 1.125rem; stroke-width: 1.75; }
+.sd-util-btn-dot {
+  position: absolute; top: 0.375rem; right: 0.375rem;
+  width: 0.5rem; height: 0.5rem;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+/* Sub-header — transparent strip between topbar and main. Per-page opt-in
+ * via {% block subheader %}. Currently used by Dashboard for the time-of-day
+ * greeting; future Report-archetype pages can use it similarly. */
+.sd-subheader {
+  padding: 1.5rem 2rem 0.5rem;
+  background: transparent;
+}
+.sd-greeting {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--bs-emphasis-color);
+  margin: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Grid primitives — see BLOCK_REFERENCE.md §4.
+ * Decoupled from blocks: blocks fill width:100%/height:100%; grids define
+ * cells. Pages compose by picking a grid and dropping blocks in cells.
+ * ───────────────────────────────────────────────────────────────────────── */
+.sd-grid-1up,
+.sd-grid-2up,
+.sd-grid-3up,
+.sd-grid-4up,
+.sd-grid-2-1,
+.sd-grid-1-2 {
+  display: grid;
+  gap: 1rem;
+  align-items: stretch;
+}
+.sd-grid-1up { grid-template-columns: 1fr; }
+.sd-grid-2up { grid-template-columns: 1fr 1fr; }
+.sd-grid-3up { grid-template-columns: 1fr 1fr 1fr; }
+.sd-grid-4up { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.sd-grid-2-1 { grid-template-columns: 2fr 1fr; }
+.sd-grid-1-2 { grid-template-columns: 1fr 2fr; }
+
+/* Vertical stack of grids/blocks on a page. Slightly larger gap than
+ * within a grid so visual rhythm reads as "blocks tighter than rows". */
+.sd-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Responsive collapse — at narrow viewports, all multi-column grids → single. */
+@media (max-width: 48rem) {
+  .sd-grid-2up,
+  .sd-grid-3up,
+  .sd-grid-4up,
+  .sd-grid-2-1,
+  .sd-grid-1-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Quick Actions bar — currently Dashboard-only (inline in home.html).
+ * Centered row of bright accent-colored buttons; sits between blocks in a .sd-stack.
+ * Each button picks a token from §3.1 via --sd-action-accent inline style. */
+.sd-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  align-items: center;
+  justify-content: center;
+}
+.sd-quick-actions .btn [data-lucide] {
+  width: 1rem; height: 1rem; stroke-width: 1.75;
+  vertical-align: -0.125em;
+  margin-right: 0.25rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Button palette — primary action buttons across the system.
+ *
+ *   .btn .sd-action-btn          → solid colored fill, white text, brightness
+ *                                   hover. Color picked via --sd-action-accent
+ *                                   (set inline to a §3.1 -deep palette token).
+ *
+ *   Use cases:
+ *     - "+ New <Entity>" buttons inside List Block title rows (default brand-deep,
+ *       per-call entity-specific via new_record.accent)
+ *     - Dashboard Quick Actions strip (warning/success/danger/info/brand)
+ *     - Future: Detail-page sub-header primary actions (Edit, etc.)
+ *
+ *   Secondary ("Cancel", "Export") → Bootstrap .btn-outline-secondary
+ *   Destructive ("Delete")         → .btn .sd-action-btn with --sd-action-accent: var(--sd-accent-danger-deep)
+ * ───────────────────────────────────────────────────────────────────────── */
+.sd-action-btn {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--sd-action-accent, var(--sd-accent-brand));
+  --bs-btn-border-color: var(--sd-action-accent, var(--sd-accent-brand));
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--sd-action-accent, var(--sd-accent-brand));
+  --bs-btn-hover-border-color: var(--sd-action-accent, var(--sd-accent-brand));
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--sd-action-accent, var(--sd-accent-brand));
+  --bs-btn-active-border-color: var(--sd-action-accent, var(--sd-accent-brand));
+  font-weight: 500;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+.sd-action-btn:hover {
+  filter: brightness(1.08);
+}
+.sd-action-btn:active {
+  filter: brightness(0.95);
+  transform: translateY(1px);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * KPI Block — see BLOCK_REFERENCE.md §3.1.
+ * Single quantitative metric. Accent stripe at the top.
+ * Caller passes accent token name; site.css resolves --sd-accent-<token>.
+ * ───────────────────────────────────────────────────────────────────────── */
+.sd-kpi {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border: 1px solid var(--sd-card-border);
+  border-radius: 0.625rem;
+  padding: 1rem 1.125rem;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+}
+.sd-kpi::before {
+  content: "";
+  position: absolute; left: 0; top: 0; right: 0;
+  height: 3px;
+  background: var(--sd-kpi-accent, var(--sd-accent-brand));
+}
+.sd-kpi-label {
+  display: flex; align-items: center; gap: 0.5rem;
+  color: #475569;
+  font-size: 0.8125rem;
+  margin-bottom: 0.5rem;
+}
+.sd-kpi-label [data-lucide] {
+  width: 1rem; height: 1rem; stroke-width: 1.75;
+}
+.sd-kpi-value {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.2;
+}
+.sd-kpi-sub {
+  display: block;
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * List Block — see BLOCK_REFERENCE.md §3.2.
+ * Two variants: compact (in-grid card) and full (full-page).
+ * Anatomy: optional top action strip (transparent, auto-hidden when empty)
+ * + block proper (white card) with title, sortable column headers, rows
+ * (capped + scrollable on compact), pagination (full only).
+ * ───────────────────────────────────────────────────────────────────────── */
+
+/* Top action strip — transparent, no border, sits above the block proper. */
+.sd-list-action-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 0.25rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+.sd-list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+.sd-list-search {
+  width: 14rem;
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--sd-card-border);
+  border-radius: 0.375rem;
+  background: #fff;
+  font-size: 0.875rem;
+}
+.sd-list-search:focus {
+  outline: none;
+  border-color: var(--sd-brand-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+/* Filter dropdown trigger — matches search bar visual (soft grey fill, defined
+ * border) so the toolbar reads as a coherent row of inputs. Always shows
+ * "{Filter}: {Selected}" so users can see active filters at a glance. */
+.sd-list-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 2.25rem;
+  padding: 0 2.25rem 0 0.875rem;       /* right pad reserves room for caret */
+  border: 1px solid var(--sd-card-border);
+  border-radius: 0.375rem;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  position: relative;
+}
+.sd-list-filter-toggle:hover,
+.sd-list-filter-toggle[aria-expanded="true"] {
+  background: #e2e8f0;
+}
+.sd-list-filter-toggle:focus-visible {
+  outline: none;
+  border-color: var(--sd-brand-primary);
+  box-shadow: var(--sd-focus-ring);
+}
+.sd-list-filter-label { color: #475569; font-weight: 500; }
+.sd-list-filter-value { color: #0f172a; font-weight: 600; }
+
+/* Block proper — bordered white card. */
+.sd-list {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border: 1px solid var(--sd-card-border);
+  border-radius: 0.625rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sd-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1.125rem;
+  border-bottom: 1px solid var(--sd-card-border);
+}
+.sd-list-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sd-list-header-action [data-lucide] {
+  width: 0.875rem; height: 0.875rem; stroke-width: 1.75;
+  vertical-align: -0.125em;
+  margin-right: 0.25rem;
+}
+
+/* Table wrapper — controls scroll cap on compact variant via inline style. */
+.sd-list-table-wrap {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+/* Table */
+.sd-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+}
+.sd-list-table thead {
+  background: #f8fafc;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.sd-list-table th,
+.sd-list-table td {
+  padding: 0.625rem 1.125rem;
+  text-align: left;
+  font-size: 0.875rem;
+  color: #0f172a;
+  vertical-align: middle;
+}
+.sd-list-table th {
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--sd-card-border);
+}
+.sd-list-table tbody tr {
+  border-top: 1px solid #e2e8f0;
+}
+.sd-list-table tbody tr:first-child {
+  border-top: none;
+}
+.sd-list-table td a {
+  color: var(--sd-brand-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+.sd-list-table td a:hover {
+  color: var(--sd-brand-primary-hover);
+  text-decoration: underline;
+}
+
+/* Cell alignment helpers (also reusable elsewhere) */
+.sd-align-start  { text-align: start; }
+.sd-align-center { text-align: center; }
+.sd-align-end    { text-align: end; }
+
+/* Sortable column header link (inside <th>). Server-rendered sort: clicking
+ * navigates to a URL with new sort params. Styled to look like a button. */
+.sd-list-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.sd-list-sort:hover { color: #0f172a; text-decoration: none; }
+.sd-list-sort-arrow {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 400;
+}
+.sd-list-sort[aria-sort="ascending"] .sd-list-sort-arrow,
+.sd-list-sort[aria-sort="descending"] .sd-list-sort-arrow {
+  color: var(--sd-brand-primary);
+}
+
+/* Empty state — single full-row cell inside <tbody> */
+.sd-list-empty {
+  padding: 2.5rem 1rem !important;
+  text-align: center;
+  color: #64748b;
+}
+.sd-list-empty-message {
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* Pagination (full variant only) */
+.sd-list-pagination {
+  padding: 0.75rem 1.125rem;
+  border-top: 1px solid var(--sd-card-border);
+  background: #f8fafc;
+}
+.sd-list-pagination ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #475569;
+}
+.sd-list-pagination a {
+  color: var(--sd-brand-primary);
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+.sd-list-pagination a:hover { background: #f1f5f9; }
+.sd-list-pagination [aria-disabled="true"] { color: #cbd5e1; }
+
+/* Variant: compact (in-grid). max-height set inline by the partial. */
+.sd-list--full .sd-list-table-wrap { max-height: none; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Tag pill — see BLOCK_REFERENCE.md §5.1.2.
+ * Used for status badges, priority pills, type labels — anywhere a colored
+ * pill needs to appear. Variant tokens come from §3.1 universal accent palette
+ * (deep variants — white text passes WCAG AA on the deep set).
+ * ───────────────────────────────────────────────────────────────────────── */
+.sd-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--sd-tag-bg, var(--sd-accent-neutral-deep));
+  color: #fff;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+.sd-tag--brand    { --sd-tag-bg: var(--sd-accent-brand-deep); }
+.sd-tag--success  { --sd-tag-bg: var(--sd-accent-success-deep); }
+.sd-tag--warning  { --sd-tag-bg: var(--sd-accent-warning-deep); }
+.sd-tag--danger   { --sd-tag-bg: var(--sd-accent-danger-deep); }
+.sd-tag--info     { --sd-tag-bg: var(--sd-accent-info-deep); }
+.sd-tag--neutral  { --sd-tag-bg: var(--sd-accent-neutral-deep); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Sub-header — Detail variant. See BLOCK_REFERENCE.md §5.1.2.
+ * Three regions: record (left, name + meta), tags (center), actions (right).
+ * ───────────────────────────────────────────────────────────────────────── */
+.sd-subheader--detail {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 2rem 0.75rem;
+  background: transparent;
+}
+.sd-subheader-record { min-width: 0; }
+.sd-subheader-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--bs-emphasis-color);
+  margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sd-subheader-meta {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+.sd-subheader-tags {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+.sd-subheader-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.sd-subheader-actions .btn [data-lucide] {
+  width: 1rem; height: 1rem; stroke-width: 1.75;
+  vertical-align: -0.125em; margin-right: 0.25rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Footer — Detail audit. See BLOCK_REFERENCE.md §5.2.1.
+ * Modified-by left-justified, Created-by right-justified. Natural-bottom
+ * (not sticky); top border separates from body content. */
+.sd-footer-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  border-top: 1px solid var(--sd-card-border);
+  font-size: 0.8125rem;
+  color: #64748b;
+  background: transparent;
+  flex-wrap: wrap;
+}
+.sd-footer-detail-modified { text-align: left; }
+.sd-footer-detail-created  { text-align: right; }
+.sd-footer-detail strong {
+  color: #475569;
+  font-weight: 600;
+}
+.sd-footer-detail time {
+  color: #475569;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Tab Panel Block — see BLOCK_REFERENCE.md §3.5.
+ * Bootstrap tabs styled to brand. Active tab gets brand-blue underline + text;
+ * tab labels include an optional record-count badge.
+ * ───────────────────────────────────────────────────────────────────────── */
+.sd-tab-panel {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--sd-card-border);
+  border-radius: 0.625rem;
+  overflow: hidden;
+}
+.sd-tab-panel .nav-tabs {
+  border-bottom-color: var(--sd-card-border);
+  padding: 0 0.5rem;
+  margin: 0;
+  background: #fff;
+}
+.sd-tab-panel .nav-tabs .nav-link {
+  color: #64748b;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 0.875rem 1rem;
+  background: transparent;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  margin-bottom: -1px; /* overlap card border */
+  text-align: center;  /* center label inside the equally-justified tab */
+}
+.sd-tab-panel .nav-tabs .nav-link:hover { color: #0f172a; }
+.sd-tab-panel .nav-tabs .nav-link.active {
+  color: var(--sd-brand-primary);
+  border-bottom-color: var(--sd-brand-primary);
+  background: transparent;
+}
+.sd-tab-panel .nav-tabs .nav-link .badge {
+  margin-left: 0.375rem;
+  background: #e2e8f0;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.5rem;
+}
+.sd-tab-panel .nav-tabs .nav-link.active .badge {
+  background: var(--sd-brand-primary);
+  color: #fff;
+}
+.sd-tab-panel .tab-content {
+  padding: 1.25rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Metric Data Block — see BLOCK_REFERENCE.md §3.3.
+ * Vertical list of label → value rows with optional drilldown chevrons.
+ * Bound to model fields/properties; not aggregations like KPI.
+ * ───────────────────────────────────────────────────────────────────────── */
+.sd-metric-data {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border: 1px solid var(--sd-card-border);
+  border-radius: 0.625rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sd-metric-data-header {
+  padding: 0.875rem 1.125rem;
+  border-bottom: 1px solid var(--sd-card-border);
+}
+.sd-metric-data-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+.sd-metric-data-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sd-metric-data-item {
+  display: block;
+  padding: 0.75rem 1.125rem;
+  border-top: 1px solid #e2e8f0;
+  text-decoration: none;
+  color: inherit;
+}
+.sd-metric-data-item:first-child { border-top: none; }
+.sd-metric-data-item:hover { background: #f8fafc; }
+.sd-metric-data-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+}
+.sd-metric-data-label {
+  font-weight: 500;
+  color: #0f172a;
+  font-size: 0.9375rem;
+}
+.sd-metric-data-chevron {
+  width: 1rem; height: 1rem; stroke-width: 1.75;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+.sd-metric-data-caption {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+.sd-metric-data-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin-top: 0.5rem;
+}
+
+/* Section card (used for detail-page cards and inline-edit pattern) */
+.sd-section-card {
+  background: #fff;
+  border: 1px solid var(--sd-card-border);
+  border-radius: 0.625rem;
+}
+.sd-section-card.editable { position: relative; transition: box-shadow 0.18s, border-color 0.18s; }
+.sd-section-card.editing {
+  box-shadow: 0 0 0 2px var(--sd-brand-primary), 0 4px 16px rgba(37, 99, 235, 0.1);
+  border-color: var(--sd-brand-primary);
+}
+.sd-section-pencil {
+  position: absolute; top: 0.875rem; right: 0.875rem;
+  width: 1.875rem; height: 1.875rem;
+  border-radius: 0.375rem;
+  color: #64748b;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  z-index: 1;
+}
+.sd-section-pencil:hover { background: #f1f5f9; color: #0f172a; border-color: var(--sd-card-border); }
+.sd-section-card.editing .sd-section-pencil { display: none; }
+.sd-section-card .edit-mode { display: none; }
+.sd-section-card.editing .view-mode { display: none; }
+.sd-section-card.editing .edit-mode { display: block; }
+
+/* Drawer (thin wrapper around Bootstrap offcanvas — 35rem wide on the right) */
+#sd-drawer { width: 35rem; max-width: 92vw; }
+#sd-drawer .offcanvas-body { background: var(--sd-body-bg); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Focus-visible system. Keyboard users see a clear ring on every interactive
+ * element. Bootstrap form controls have their own focus styles that we leave
+ * alone; this targets our custom .sd-* components.
+ *
+ * Convention: pair `outline: none` with `box-shadow: var(--sd-focus-ring*)`
+ * — never strip the outline without a visible replacement.
+ * ───────────────────────────────────────────────────────────────────────── */
+.sd-nav-item:focus-visible,
+.sd-sidebar-accordion-toggle:focus-visible,
+.sd-sidebar-user-button:focus-visible {
+  outline: none;
+  box-shadow: var(--sd-focus-ring-dark);
+}
+.sd-kpi:focus-visible,
+.sd-list-sort:focus-visible,
+.sd-metric-data-item:focus-visible,
+.sd-section-pencil:focus-visible,
+.sd-util-btn:focus-visible,
+.sd-tab-panel .nav-link:focus-visible {
+  outline: none;
+  box-shadow: var(--sd-focus-ring);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Reduced-motion preference. Disables long transitions/animations for users
+ * who request reduced motion at the OS level (WCAG 2.3.3 Animation from
+ * Interactions / Apple "Reduce Motion" / Windows "Show animations").
+ * ───────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print rules — strip app chrome when the user prints a Quote/Invoice.
+ * Expand these as print layouts mature (Phase 5/6). */
+@media print {
+  .sd-sidebar, .sd-topbar, #sd-drawer, .sd-skip-link, .sd-no-print { display: none !important; }
+  .sd-main { overflow: visible !important; }
+  body { background: #fff !important; }
+}

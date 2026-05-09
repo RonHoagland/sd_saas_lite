@@ -1,0 +1,77 @@
+{% extends "_section_base.html" %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">Jobs</span>
+{% endblock %}
+
+{% block section_actions %}
+  <a href="#" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+    <i data-lucide="plus"></i> New Job
+  </a>
+{% endblock %}
+
+{% block section_body %}
+<div class="sd-section-card overflow-hidden">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">#</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Subject</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Customer</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Status</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Scheduled</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Assigned</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for j in jobs %}
+        <tr>
+          <td class="text-body-secondary">{{ j.wo_number|default:"—" }}</td>
+          <td>
+            <a href="{% url 'job-detail' j.pk %}" class="link-brand text-decoration-none fw-medium">
+              {{ j.subject|default:"(no subject)" }}
+            </a>
+          </td>
+          <td class="text-body-secondary">
+            {% if j.customer %}
+              <a href="{% url 'customer-detail' j.customer.pk %}" class="link-brand text-decoration-none">{{ j.customer }}</a>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            {% if j.status == 'Scheduled' %}
+              <span class="badge bg-info-subtle text-info-emphasis">{{ j.status }}</span>
+            {% elif j.status == 'In Progress' %}
+              <span class="badge bg-primary-subtle text-primary-emphasis">{{ j.status }}</span>
+            {% elif j.status == 'Completed' %}
+              <span class="badge bg-success-subtle text-success-emphasis">{{ j.status }}</span>
+            {% elif j.status == 'On Hold' %}
+              <span class="badge bg-warning-subtle text-warning-emphasis">{{ j.status }}</span>
+            {% elif j.status == 'Cancelled' %}
+              <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ j.status }}</span>
+            {% else %}
+              <span class="badge bg-light text-body-secondary">{{ j.status }}</span>
+            {% endif %}
+          </td>
+          <td class="text-body-secondary">
+            {% if j.scheduled_date %}
+              {{ j.scheduled_date|date:"M j, Y" }}{% if j.scheduled_time %} {{ j.scheduled_time|time:"g:i A" }}{% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td class="text-body-secondary">{{ j.assigned_to.username|default:"—" }}</td>
+          <td class="text-end">
+            <a href="{% url 'job-detail' j.pk %}" class="link-brand text-decoration-none small">View</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center text-body-secondary py-5">No jobs yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

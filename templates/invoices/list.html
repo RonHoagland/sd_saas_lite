@@ -1,0 +1,73 @@
+{% extends "_section_base.html" %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">Invoices</span>
+{% endblock %}
+
+{% block section_actions %}
+  <a href="#" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+    <i data-lucide="plus"></i> New Invoice
+  </a>
+{% endblock %}
+
+{% block section_body %}
+<div class="sd-section-card overflow-hidden">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">#</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Customer</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Status</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Invoice Date</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Due Date</th>
+          <th class="text-uppercase text-body-secondary text-end" style="font-size:11px;letter-spacing:0.04em;">Total</th>
+          <th class="text-uppercase text-body-secondary text-end" style="font-size:11px;letter-spacing:0.04em;">Balance</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr>
+          <td>
+            <a href="{% url 'invoice-detail' inv.pk %}" class="link-brand text-decoration-none fw-medium">
+              {{ inv.invoice_number|default:"(unsaved)" }}
+            </a>
+          </td>
+          <td class="text-body-secondary">
+            {% if inv.customer %}<a href="{% url 'customer-detail' inv.customer.pk %}" class="link-brand text-decoration-none">{{ inv.customer }}</a>{% else %}—{% endif %}
+          </td>
+          <td>
+            {% if inv.status == 'Draft' %}
+              <span class="badge bg-secondary-subtle text-secondary-emphasis">Draft</span>
+            {% elif inv.status == 'Sent' %}
+              <span class="badge bg-info-subtle text-info-emphasis">Sent</span>
+            {% elif inv.status == 'Partial' %}
+              <span class="badge bg-warning-subtle text-warning-emphasis">Partial</span>
+            {% elif inv.status == 'Paid' %}
+              <span class="badge bg-success-subtle text-success-emphasis">Paid</span>
+            {% elif inv.status == 'Overdue' %}
+              <span class="badge bg-danger-subtle text-danger-emphasis">Overdue</span>
+            {% else %}
+              <span class="badge bg-light text-body-secondary">{{ inv.status }}</span>
+            {% endif %}
+          </td>
+          <td class="text-body-secondary">{{ inv.invoice_date|date:"M j, Y"|default:"—" }}</td>
+          <td class="text-body-secondary">{{ inv.due_date|date:"M j, Y"|default:"—" }}</td>
+          <td class="text-end">${{ inv.total|floatformat:2 }}</td>
+          <td class="text-end">${{ inv.balance_due|floatformat:2 }}</td>
+          <td class="text-end">
+            <a href="{% url 'invoice-detail' inv.pk %}" class="link-brand text-decoration-none small">View</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="text-center text-body-secondary py-5">No invoices yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

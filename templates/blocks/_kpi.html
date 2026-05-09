@@ -1,0 +1,23 @@
+{% load sd_ui %}{% comment %}
+KPI Block — see BLOCK_REFERENCE.md §3.1.
+
+Single quantitative metric with accent stripe.
+
+Data contract:
+  label    (required, string)   Top-row label (e.g. "Open Requests")
+  value    (required, str|int)  Big value — caller pre-formats
+  sub      (optional, string)   Bottom qualifier (e.g. "Open")
+  icon     (optional, string)   Lucide icon name; decorative
+  accent   (optional, string)   §3.1 token name (brand/success/warning/
+                                danger/info/neutral) — default "brand".
+                                Raw hex allowed but discouraged.
+  href     (optional, url)      If set, the entire card is a link.
+{% endcomment %}{% if href %}<a class="sd-kpi" href="{{ href }}" style="--sd-kpi-accent: {{ accent|sd_accent_css }};">
+  <span class="sd-kpi-label">{% if icon %}<i data-lucide="{{ icon }}" aria-hidden="true"></i>{% endif %} {{ label }}</span>
+  <span class="sd-kpi-value">{{ value }}</span>
+  {% if sub %}<span class="sd-kpi-sub">{{ sub }}</span>{% endif %}
+</a>{% else %}<div class="sd-kpi" role="group" aria-label="{{ label }}: {{ value }}" style="--sd-kpi-accent: {{ accent|sd_accent_css }};">
+  <span class="sd-kpi-label">{% if icon %}<i data-lucide="{{ icon }}" aria-hidden="true"></i>{% endif %} {{ label }}</span>
+  <span class="sd-kpi-value">{{ value }}</span>
+  {% if sub %}<span class="sd-kpi-sub">{{ sub }}</span>{% endif %}
+</div>{% endif %}

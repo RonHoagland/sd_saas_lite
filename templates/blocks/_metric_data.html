@@ -1,0 +1,31 @@
+{% comment %}
+Metric Data Block — see BLOCK_REFERENCE.md §3.3.
+
+Vertical list of label → value rows with optional drilldown chevrons.
+Bound to model fields/properties; not aggregations like KPI.
+
+Data contract:
+  title          (required, string)   Card heading
+  heading_level  (optional, int)      2 (default) or 3 (Detail pages). See §6.2.
+  metrics        (required, iterable) Each dict: label, caption, value, href
+{% endcomment %}{% with h_level=heading_level|default:2 %}
+<section class="sd-metric-data" aria-labelledby="sd-metric-data-{{ title|slugify }}">
+  <header class="sd-metric-data-header">
+    <h{{ h_level }} class="sd-metric-data-title" id="sd-metric-data-{{ title|slugify }}">{{ title }}</h{{ h_level }}>
+  </header>
+  <ul class="sd-metric-data-list">
+    {% for m in metrics %}
+      <li>
+        {% if m.href %}<a class="sd-metric-data-item" href="{{ m.href }}">{% else %}<div class="sd-metric-data-item">{% endif %}
+          <div class="sd-metric-data-row">
+            <span class="sd-metric-data-label">{{ m.label }}</span>
+            {% if m.href %}<i data-lucide="chevron-right" class="sd-metric-data-chevron" aria-hidden="true"></i>{% endif %}
+          </div>
+          {% if m.caption %}<div class="sd-metric-data-caption">{{ m.caption }}</div>{% endif %}
+          {% if m.value %}<div class="sd-metric-data-value">{{ m.value }}</div>{% endif %}
+        {% if m.href %}</a>{% else %}</div>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endwith %}

@@ -1,0 +1,51 @@
+{% comment %}
+Tab Panel Block — see BLOCK_REFERENCE.md §3.5.
+
+Bootstrap tabs styled to brand. Each tab label may include a record count
+badge. Tab content can come from a partial (panel_template) or fall back
+to placeholder text using the tab's empty_text.
+
+Data contract:
+  tabs    (required, iterable of dicts): each {id, label, count, panel_template, empty_text, panel_context}
+            id              — stable HTML id slug (e.g. "requests")
+            label           — visible text (e.g. "Requests")
+            count           — optional record-count badge (int); pass None to suppress
+            panel_template  — optional template path to render inside the tab pane
+            empty_text      — optional fallback when no panel_template is set
+            panel_context   — optional dict; passed to {% include %} for panel_template
+  active  (optional): id of initially active tab — defaults to the first tab
+{% endcomment %}{% with active_id=active|default:tabs.0.id %}
+<div class="sd-tab-panel">
+  <ul class="nav nav-tabs nav-justified" role="tablist">
+    {% for tab in tabs %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link {% if tab.id == active_id %}active{% endif %}"
+                id="sd-tab-{{ tab.id }}-button"
+                type="button"
+                role="tab"
+                data-bs-toggle="tab"
+                data-bs-target="#sd-tab-{{ tab.id }}"
+                aria-controls="sd-tab-{{ tab.id }}"
+                aria-selected="{% if tab.id == active_id %}true{% else %}false{% endif %}">
+          {{ tab.label }}{% if tab.count is not None %} <span class="badge">{{ tab.count }}</span>{% endif %}
+        </button>
+      </li>
+    {% endfor %}
+  </ul>
+  <div class="tab-content">
+    {% for tab in tabs %}
+      <div class="tab-pane fade {% if tab.id == active_id %}show active{% endif %}"
+           id="sd-tab-{{ tab.id }}"
+           role="tabpanel"
+           aria-labelledby="sd-tab-{{ tab.id }}-button"
+           tabindex="0">
+        {% if tab.panel_template %}
+          {% include tab.panel_template with ctx=tab.panel_context %}
+        {% else %}
+          <p class="text-body-secondary small mb-0">{{ tab.empty_text|default:tab.label }} for this record will appear here.</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endwith %}

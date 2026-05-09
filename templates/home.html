@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard · ServizDesk Lite{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block breadcrumb %}
+  <li class="sd-breadcrumb-item">Dashboard</li>
+{% endblock %}
+
+{% block subheader %}
+  {% include "includes/_subheader_greeting.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3 px-2" style="max-width: 1400px;">
+  <div class="sd-stack">
+
+    {# Workflow KPI strip — see BLOCK_REFERENCE.md §3.1, §4.1 sd-grid-4up #}
+    <div class="sd-grid-4up">
+      {% url 'requests' as requests_url %}
+      {% include "blocks/_kpi.html" with label="Requests" value=stats.service_requests|default:0 sub="Open" icon="inbox" accent="warning" href=requests_url %}
+
+      {% url 'quotes' as quotes_url %}
+      {% include "blocks/_kpi.html" with label="Quotes" value=stats.open_quotes|default:0 sub="Draft & Sent" icon="file-text" accent="danger" href=quotes_url %}
+
+      {% url 'jobs' as jobs_url %}
+      {% include "blocks/_kpi.html" with label="Jobs" value=stats.open_work_orders|default:0 sub="Open, Scheduled & In Progress" icon="clipboard-list" accent="success" href=jobs_url %}
+
+      {% url 'invoices' as invoices_url %}
+      {% include "blocks/_kpi.html" with label="Invoices" value=stats.unpaid_invoices|default:0 sub="Draft & Sent" icon="receipt" accent="info" href=invoices_url %}
+    </div>
+
+    {# Quick Actions bar — Dashboard-only for now (kept inline; extract to a Quick Actions block #}
+    {# when a second Report page wants the same pattern). Buttons route to "+ New <Entity>" pages. #}
+    {# Each button gets a different accent token from §3.1 for visual variety. #}
+    <div class="sd-quick-actions" role="group" aria-label="Quick actions">
+      {# TODO(Phase 2.1): wire href to /intake once Service Request intake page exists. #}
+      <a class="btn sd-action-btn" style="--sd-action-accent: var(--sd-accent-warning-deep);" href="#"><i data-lucide="plus" aria-hidden="true"></i> New Service Request</a>
+      {# TODO(Phase 2.4): wire href to /customers/new/ #}
+      <a class="btn sd-action-btn" style="--sd-action-accent: var(--sd-accent-success-deep);" href="#"><i data-lucide="plus" aria-hidden="true"></i> New Customer</a>
+      {# TODO(Phase 5.2): wire href to /quotes/new/ — requires SR context #}
+      <a class="btn sd-action-btn" style="--sd-action-accent: var(--sd-accent-danger-deep);" href="#"><i data-lucide="plus" aria-hidden="true"></i> New Quote</a>
+      {# TODO(Phase 6.2): wire href to /invoices/new/ — requires Job context #}
+      <a class="btn sd-action-btn" style="--sd-action-accent: var(--sd-accent-info-deep);" href="#"><i data-lucide="plus" aria-hidden="true"></i> New Invoice</a>
+      {# TODO(Phase 6.5): wire href to /payments/new/ — requires Invoice context #}
+      <a class="btn sd-action-btn" style="--sd-action-accent: var(--sd-accent-brand-deep);" href="#"><i data-lucide="plus" aria-hidden="true"></i> New Payment</a>
+    </div>
+
+    {# Today's Schedule (List Block, compact) + Business Performance (Metric Data Block) — sd-grid-2-1 #}
+    <div class="sd-grid-2-1">
+      {% include "blocks/_list.html" with title="Today's Schedule" variant="compact" columns=schedule_columns rows=schedule_rows empty_text="You have no visits scheduled today." empty_action=schedule_empty_action %}
+
+      {% include "blocks/_metric_data.html" with title="Business Performance" metrics=business_metrics %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

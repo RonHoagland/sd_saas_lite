@@ -1,0 +1,29 @@
+{% comment %}
+Footer — Detail audit variant. See BLOCK_REFERENCE.md §5.2.1.
+
+Modified-by left-justified, Created-by right-justified. Natural-bottom
+(not sticky); top border separates from body content.
+
+Data contract:
+  created_by   (required)            who created the record. May be a User
+                                      object or a string (TenantModel.created_by
+                                      is currently a CharField). Renders __str__
+                                      either way; "system" if blank/None.
+  created_at   (required, datetime)  when it was created.
+  modified_by  (required)            who last modified — populated to the
+                                      creator's value at creation, then updated
+                                      on each subsequent edit. Never null.
+  modified_at  (required, datetime)  when last modified — populated to created_at
+                                      at creation, then updated on each edit.
+
+Both lines always render, even on never-edited records.
+{% endcomment %}<footer class="sd-footer-detail" aria-label="Audit information">
+  <div class="sd-footer-detail-modified">
+    Modified by <strong>{{ modified_by|default:"system" }}</strong>
+    · <time datetime="{{ modified_at|date:'c' }}">{{ modified_at|date:"M j, Y g:i A" }}</time>
+  </div>
+  <div class="sd-footer-detail-created">
+    Created by <strong>{{ created_by|default:"system" }}</strong>
+    · <time datetime="{{ created_at|date:'c' }}">{{ created_at|date:"M j, Y g:i A" }}</time>
+  </div>
+</footer>
