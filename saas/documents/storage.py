@@ -32,6 +32,7 @@ import os
 import uuid
 from pathlib import Path
 
+import filetype
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
@@ -233,16 +234,46 @@ def generate_file_key(tenant_id, entity_type, entity_id, original_filename):
 # FILE VALIDATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# MIME types that filetype cannot detect (no binary signature). These are
+# trusted on declared content_type *only* when the file content is also
+# valid UTF-8 — that catches binary payloads renamed to .txt/.csv.
+_TEXT_MIME_FALLBACK = {
+    'text/plain',
+    'text/csv',
+}
+
+
 def validate_file(file_obj):
     """
-    Validate file size and MIME type against configured limits.
+    Validate file size, declared MIME type, and magic-byte signature.
+
+    Three checks are run in order. Each raises early on failure:
+
+      1. **Size** — must not exceed `SDTA_MAX_FILE_SIZE_MB`.
+      2. **Declared MIME** — `file_obj.content_type` must be in
+         `SDTA_ALLOWED_MIME_TYPES`.
+      3. **Magic-byte sniff** — File Upload Specification V1 §3.3. Reads
+         the first 261 bytes through the `filetype` library:
+
+           - If a binary signature is detected, the detected MIME must
+             equal the declared MIME (catches rename attacks like an
+             executable with a .pdf extension) and must also be in the
+             allowlist.
+           - If no signature is detected, the declared type must be in a
+             small text-only allowlist AND the header must decode as
+             UTF-8. This rejects binary content masquerading as text.
+
+    The file position is restored to 0 after sniffing.
 
     Args:
-        file_obj: Django UploadedFile (or similar with .size and .content_type).
+        file_obj: Django UploadedFile (or similar with .size, .content_type,
+                  and a file-like read interface).
 
     Raises:
-        FileTooLargeError: If file exceeds SDTA_MAX_FILE_SIZE_MB.
-        DisallowedMimeTypeError: If MIME type is not in SDTA_ALLOWED_MIME_TYPES.
+        FileTooLargeError: If file exceeds the configured size cap.
+        DisallowedMimeTypeError: If the declared MIME is not allowed,
+            or the magic-byte sniff disagrees with the declaration,
+            or the type cannot be verified.
     """
     max_size_bytes = getattr(settings, 'SDTA_MAX_FILE_SIZE_MB', 25) * 1024 * 1024
 
@@ -252,11 +283,50 @@ def validate_file(file_obj):
             f"{settings.SDTA_MAX_FILE_SIZE_MB} MB limit."
         )
 
+    declared = (file_obj.content_type or '').lower().strip()
     allowed_types = getattr(settings, 'SDTA_ALLOWED_MIME_TYPES', [])
-    if allowed_types and file_obj.content_type not in allowed_types:
+    if allowed_types and declared not in allowed_types:
         raise DisallowedMimeTypeError(
-            f"File type '{file_obj.content_type}' is not allowed. "
+            f"File type '{declared}' is not allowed. "
             f"Accepted types: {', '.join(allowed_types)}"
+        )
+
+    # ── Magic-byte sniff (File Upload Spec V1 §3.3) ──────────────────────
+    file_obj.seek(0)
+    try:
+        header = file_obj.read(261)
+    finally:
+        file_obj.seek(0)
+
+    detected = filetype.guess(header)
+    if detected is None:
+        # filetype only knows ~100 binary signatures; text formats fall
+        # through to this branch. Trust declared MIME for a small fallback
+        # set, but only if the bytes look like text.
+        if declared in _TEXT_MIME_FALLBACK:
+            try:
+                header.decode('utf-8')
+            except UnicodeDecodeError as exc:
+                raise DisallowedMimeTypeError(
+                    f"Content of '{getattr(file_obj, 'name', 'upload')}' "
+                    f"declared as {declared} is not valid UTF-8 text."
+                ) from exc
+            return
+        raise DisallowedMimeTypeError(
+            f"Cannot verify file type of "
+            f"'{getattr(file_obj, 'name', 'upload')}': "
+            f"no recognized binary signature."
+        )
+
+    if detected.mime != declared:
+        raise DisallowedMimeTypeError(
+            f"File contents identify as '{detected.mime}' but were "
+            f"declared as '{declared}'. Refusing rename attack."
+        )
+
+    if allowed_types and detected.mime not in allowed_types:
+        raise DisallowedMimeTypeError(
+            f"File type '{detected.mime}' is not allowed."
         )
 
 

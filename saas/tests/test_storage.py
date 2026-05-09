@@ -11,6 +11,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import ProtectedError
+from PIL import Image
 
 from tests.base import SDTATestCase
 from documents.models import Document, FileUploadLog, FileDownloadLog, ScanStatus
@@ -31,10 +32,52 @@ from documents.storage import (
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Helper to create an UploadedFile
+# Real-bytes fixtures
+#
+# After File Upload Spec V1 §3.3 magic-byte sniffing landed in validate_file,
+# tests must use payloads with real format signatures. Helpers below emit the
+# minimum bytes that filetype.guess() recognises for each format.
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def make_upload(name='test.pdf', content=b'test file content', content_type='application/pdf'):
+# Tiny but valid PDF — `%PDF-` header is the only thing filetype needs.
+MINIMAL_PDF = (
+    b'%PDF-1.4\n%\xc7\xec\x8f\xa2\n'
+    b'1 0 obj <<>>\nendobj\n'
+    b'trailer <<>>\n%%EOF\n'
+)
+
+
+def _png_bytes(size=(1, 1), color='red'):
+    buf = BytesIO()
+    Image.new('RGB', size, color).save(buf, format='PNG')
+    return buf.getvalue()
+
+
+def _jpeg_bytes(size=(1, 1), color='red'):
+    buf = BytesIO()
+    Image.new('RGB', size, color).save(buf, format='JPEG')
+    return buf.getvalue()
+
+
+def make_upload(name='test.pdf', content=None, content_type='application/pdf'):
+    """Build a SimpleUploadedFile whose body matches its declared MIME.
+
+    When ``content`` is omitted, a minimal valid payload for the declared
+    ``content_type`` is generated so the upload survives magic-byte sniffing.
+    Tests that need to exercise mismatched / oversized / fake content can
+    pass ``content`` explicitly.
+    """
+    if content is None:
+        if content_type == 'application/pdf':
+            content = MINIMAL_PDF
+        elif content_type == 'image/png':
+            content = _png_bytes()
+        elif content_type == 'image/jpeg':
+            content = _jpeg_bytes()
+        elif content_type in ('text/plain', 'text/csv'):
+            content = b'hello, world\n'
+        else:
+            content = b''
     return SimpleUploadedFile(name, content, content_type=content_type)
 
 
@@ -108,6 +151,78 @@ class ValidateFileTest(SDTATestCase):
         for mime_type in ['application/pdf', 'image/jpeg', 'image/png', 'text/plain']:
             f = make_upload(content_type=mime_type)
             validate_file(f)  # Should not raise
+
+    # ── Magic-byte sniffing (File Upload Spec V1 §3.3) ──────────────────
+
+    def test_rename_attack_pdf_with_jpeg_bytes_rejected(self):
+        """A JPEG file declared as application/pdf must be rejected."""
+        f = make_upload(
+            name='evil.pdf',
+            content=_jpeg_bytes(),
+            content_type='application/pdf',
+        )
+        with self.assertRaises(DisallowedMimeTypeError) as ctx:
+            validate_file(f)
+        self.assertIn('rename attack', str(ctx.exception).lower())
+
+    def test_rename_attack_image_declared_as_pdf_rejected(self):
+        """A PNG file declared as application/pdf must be rejected."""
+        f = make_upload(
+            name='evil.pdf',
+            content=_png_bytes(),
+            content_type='application/pdf',
+        )
+        with self.assertRaises(DisallowedMimeTypeError):
+            validate_file(f)
+
+    def test_unrecognised_binary_content_rejected(self):
+        """Random binary content with no magic signature is unverifiable."""
+        f = make_upload(
+            name='mystery.pdf',
+            content=b'\x00\x01\x02\x03\x04 not actually a pdf',
+            content_type='application/pdf',
+        )
+        with self.assertRaises(DisallowedMimeTypeError) as ctx:
+            validate_file(f)
+        self.assertIn('cannot verify', str(ctx.exception).lower())
+
+    def test_text_plain_with_text_content_passes(self):
+        f = make_upload(
+            name='notes.txt',
+            content=b'hello, world\nthis is plain text\n',
+            content_type='text/plain',
+        )
+        validate_file(f)  # Should not raise
+
+    def test_text_csv_with_text_content_passes(self):
+        f = make_upload(
+            name='data.csv',
+            content=b'name,value\nfoo,1\nbar,2\n',
+            content_type='text/csv',
+        )
+        validate_file(f)  # Should not raise
+
+    def test_text_plain_with_binary_content_rejected(self):
+        """Binary payload renamed to .txt and declared text/plain — reject."""
+        f = make_upload(
+            name='evil.txt',
+            content=_png_bytes(),  # binary masquerading as text
+            content_type='text/plain',
+        )
+        with self.assertRaises(DisallowedMimeTypeError):
+            # PNG signature is detected, declared mismatch -> rename-attack
+            # branch fires.
+            validate_file(f)
+
+    def test_text_plain_with_invalid_utf8_rejected(self):
+        """Text-fallback branch requires the header to decode as UTF-8."""
+        f = make_upload(
+            name='evil.txt',
+            content=b'\xff\xfe\x00plain text? no.',
+            content_type='text/plain',
+        )
+        with self.assertRaises(DisallowedMimeTypeError):
+            validate_file(f)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -240,7 +355,8 @@ class UploadFileTest(SDTATestCase):
         backend.delete(doc.file_key)
 
     def test_sha256_is_correct(self):
-        content = b'known content for hash test'
+        # Must be a payload that survives magic-byte sniffing.
+        content = MINIMAL_PDF
         expected_hash = hashlib.sha256(content).hexdigest()
         f = make_upload(content=content)
         doc = self._upload(file_obj=f)

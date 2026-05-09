@@ -39,3 +39,7 @@ Pillow>=12.2.0
 # Field-level encryption — PyCA-maintained binding to libsodium.
 # Used by config/encryption.py for EncryptedCharField / EncryptedTextField.
 PyNaCl>=1.5,<2
+
+# Magic-byte / signature MIME sniffing for upload validation.
+# Pure-Python (no system libmagic dep) — File Upload Spec V1 §3.3.
+filetype>=1.2
