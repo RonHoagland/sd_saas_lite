@@ -3,6 +3,7 @@
 
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
 from service.models import (
@@ -203,6 +204,72 @@ class ConvertQuoteToInvoiceTest(SDTATestCase):
         quote.refresh_from_db()
         invoice = convert_quote_to_invoice(quote)
         self.assertEqual(WorkOrderInvoice.objects.filter(invoice=invoice).count(), 0)
+
+    # ── Accepted-only guard (Lite MVP V4 §18 / §20) ────────────────────────
+
+    def test_draft_quote_cannot_be_invoiced(self):
+        customer = self.make_customer()
+        quote = Quote.objects.create(
+            tenant_id=self.tenant_id, customer=customer,
+            status=Quote.StatusChoices.DRAFT,
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            convert_quote_to_invoice(quote)
+        self.assertIn('Accepted', str(ctx.exception))
+
+    def test_sent_quote_cannot_be_invoiced(self):
+        customer = self.make_customer()
+        quote = Quote.objects.create(
+            tenant_id=self.tenant_id, customer=customer,
+            status=Quote.StatusChoices.SENT,
+        )
+        with self.assertRaises(ValidationError):
+            convert_quote_to_invoice(quote)
+
+    def test_declined_quote_cannot_be_invoiced(self):
+        customer = self.make_customer()
+        quote = Quote.objects.create(
+            tenant_id=self.tenant_id, customer=customer,
+            status=Quote.StatusChoices.DECLINED,
+        )
+        with self.assertRaises(ValidationError):
+            convert_quote_to_invoice(quote)
+
+    def test_expired_quote_cannot_be_invoiced(self):
+        customer = self.make_customer()
+        quote = Quote.objects.create(
+            tenant_id=self.tenant_id, customer=customer,
+            status=Quote.StatusChoices.EXPIRED,
+        )
+        with self.assertRaises(ValidationError):
+            convert_quote_to_invoice(quote)
+
+    def test_already_invoiced_quote_cannot_be_invoiced_again(self):
+        customer = self.make_customer()
+        quote = Quote.objects.create(
+            tenant_id=self.tenant_id, customer=customer,
+            status=Quote.StatusChoices.INVOICED,
+        )
+        with self.assertRaises(ValidationError):
+            convert_quote_to_invoice(quote)
+
+    def test_failed_conversion_does_not_partially_create(self):
+        """A rejected conversion must not leave an Invoice or status drift."""
+        customer = self.make_customer()
+        quote = Quote.objects.create(
+            tenant_id=self.tenant_id, customer=customer,
+            status=Quote.StatusChoices.DRAFT,
+        )
+        QuoteLine.objects.create(
+            tenant_id=self.tenant_id, quote=quote,
+            description='Service', quantity=1, unit_price=Decimal('50.00'),
+        )
+        invoices_before = Invoice.objects.count()
+        with self.assertRaises(ValidationError):
+            convert_quote_to_invoice(quote)
+        quote.refresh_from_db()
+        self.assertEqual(quote.status, Quote.StatusChoices.DRAFT)
+        self.assertEqual(Invoice.objects.count(), invoices_before)
 
 
 class ConvertWorkOrderToInvoiceTest(SDTATestCase):

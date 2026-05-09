@@ -2,6 +2,7 @@
 # Business logic for entity conversions and complex operations in the service app.
 # Source: Front-end Readiness Roadmap, Phase 2.
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from .models import (
     ServiceRequest, WorkOrder, WorkOrderLine,
@@ -105,14 +106,25 @@ def convert_quote_to_work_order(quote):
 
 def convert_quote_to_invoice(quote):
     """
-    Creates an Invoice from an accepted Quote.
-    Copies all line items and tax settings.
+    Create an Invoice from an Accepted Quote.
+
+    Copies all line items and tax settings from the source quote, sets the
+    quote's status to Invoiced, and links any associated WorkOrder via a
+    WorkOrderInvoice junction row.
+
+    Per Lite MVP V4 §18 / §20 and `LITE_BUILD_TODO` Phase 5.3, only quotes
+    in the Accepted state may be invoiced. Drafts and Sent quotes still
+    represent open negotiations; Declined / Expired / already-Invoiced
+    quotes are terminal.
+
+    Raises:
+        ValidationError: when the source quote is not in Accepted state.
     """
     if quote.status != Quote.StatusChoices.ACCEPTED:
-        # Strictly, we should only invoice accepted quotes.
-        # But for the sake of the engine, we allow the caller to decide
-        # or we enforce it here.
-        pass
+        raise ValidationError(
+            f"Cannot create an invoice from a quote in '{quote.status}' "
+            f"status. Only Accepted quotes may be invoiced."
+        )
 
     with transaction.atomic():
         invoice = Invoice.objects.create(
