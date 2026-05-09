@@ -71,8 +71,17 @@ class DocumentSerializer(TenantModelSerializer):
         parent_id: UUIDField (write-only) — ID of the parent entity
 
     Immutability:
-        File metadata fields (original_filename, file_key, file_size_bytes, mime_type, sha256_hash)
-        are read-only after creation. Only scan_status can be updated.
+        File metadata fields (original_filename, file_size_bytes, mime_type,
+        sha256_hash) are read-only after creation. Only scan_status can be
+        updated.
+
+    Security note:
+        `file_key` (the raw storage path) is intentionally NOT exposed in this
+        serializer per File Upload Specification V1 §5.3 and Note/Document
+        Implementation Specification V1 §3.5. Clients receive download URLs
+        from the storage layer (presigned URLs for S3, media URLs for local),
+        never the raw key. The field still exists on the model and is visible
+        in the Django admin for staff debugging.
     """
 
     parent_entity = serializers.SerializerMethodField(read_only=True)
@@ -83,7 +92,6 @@ class DocumentSerializer(TenantModelSerializer):
         model = Document
         fields = TenantModelSerializer.Meta.fields + [
             'original_filename',
-            'file_key',
             'file_size_bytes',
             'mime_type',
             'sha256_hash',
@@ -94,7 +102,6 @@ class DocumentSerializer(TenantModelSerializer):
         ]
         read_only_fields = TenantModelSerializer.Meta.read_only_fields + [
             'original_filename',
-            'file_key',
             'file_size_bytes',
             'mime_type',
             'sha256_hash',
