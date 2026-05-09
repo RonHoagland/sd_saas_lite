@@ -230,7 +230,12 @@ SDTA_S3_ENDPOINT_URL = config(
     default='https://nyc3.digitaloceanspaces.com',
 )
 
-# File upload constraints
+# File upload constraints.
+#
+# File Upload Specification V1 §3.1 names 100 MB as the SDTA-tier ceiling,
+# but the platform default is intentionally conservative — a single bad
+# upload at 100 MB can quickly eat a tenant's storage quota. Operators that
+# need the full ceiling override SDTA_MAX_FILE_SIZE_MB=100 in their .env.
 SDTA_MAX_FILE_SIZE_MB = config('SDTA_MAX_FILE_SIZE_MB', default=25, cast=int)
 SDTA_ALLOWED_MIME_TYPES = [
     # Documents
@@ -249,8 +254,13 @@ SDTA_ALLOWED_MIME_TYPES = [
     'image/svg+xml',
 ]
 
-# Presigned URL expiry (seconds)
-SDTA_PRESIGNED_URL_EXPIRY = config('SDTA_PRESIGNED_URL_EXPIRY', default=3600, cast=int)
+# Presigned URL expiry (seconds).
+#
+# File Upload Specification V1 §5.3 mandates 15 minutes (900s). Short-lived
+# URLs are essential because the URL is the entire authentication for the
+# download — once issued, anyone with the URL can fetch the file until it
+# expires. Override only when you have a specific operational reason.
+SDTA_PRESIGNED_URL_EXPIRY = config('SDTA_PRESIGNED_URL_EXPIRY', default=900, cast=int)
 
 # ─── Session & Security Cookies ───────────────────────────────────────────────
 # Source: Technical Architecture V2, Section 8.1.

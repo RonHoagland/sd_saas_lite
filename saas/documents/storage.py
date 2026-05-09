@@ -170,7 +170,9 @@ class S3Backend:
     def get_download_url(self, file_key, expiry=None):
         """Generate a presigned GET URL for downloading."""
         if expiry is None:
-            expiry = getattr(settings, 'SDTA_PRESIGNED_URL_EXPIRY', 3600)
+            # File Upload Spec V1 §5.3: 15-minute default. Settings layer
+            # overrides via SDTA_PRESIGNED_URL_EXPIRY.
+            expiry = getattr(settings, 'SDTA_PRESIGNED_URL_EXPIRY', 900)
         try:
             return self._client.generate_presigned_url(
                 'get_object',
@@ -183,7 +185,9 @@ class S3Backend:
     def get_upload_url(self, file_key, expiry=None, content_type='application/octet-stream'):
         """Generate a presigned PUT URL for direct browser upload."""
         if expiry is None:
-            expiry = getattr(settings, 'SDTA_PRESIGNED_URL_EXPIRY', 3600)
+            # File Upload Spec V1 §5.3: 15-minute default. Settings layer
+            # overrides via SDTA_PRESIGNED_URL_EXPIRY.
+            expiry = getattr(settings, 'SDTA_PRESIGNED_URL_EXPIRY', 900)
         try:
             return self._client.generate_presigned_url(
                 'put_object',
