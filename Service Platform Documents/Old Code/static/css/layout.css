@@ -1,0 +1,163 @@
+/* App Shell Layout */
+.app-shell {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    grid-template-rows: 60px 1fr;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.app-sidebar {
+    grid-row: 1 / -1;
+    grid-column: 1;
+    background-color: var(--bx-color-secondary);
+    color: var(--bx-color-bg-surface);
+    display: flex;
+    flex-direction: column;
+    padding: var(--bx-spacing-md);
+}
+
+.app-sidebar-logo {
+    /* Counteract sidebar padding so we control spacing precisely */
+    margin: calc(-1 * var(--bx-spacing-md)) calc(-1 * var(--bx-spacing-md)) var(--bx-spacing-md) calc(-1 * var(--bx-spacing-md));
+    padding: 10px 10px 0 10px;
+}
+
+.app-sidebar-logo img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+}
+
+.app-sidebar-header {
+    margin-bottom: var(--bx-spacing-xl);
+    font-size: var(--bx-font-size-xl);
+    font-weight: bold;
+}
+
+.app-nav {
+    flex: 1;
+}
+
+.nav-item {
+    display: block;
+    padding: var(--bx-spacing-sm) var(--bx-spacing-md);
+    margin-bottom: var(--bx-spacing-xs);
+    border-radius: 4px;
+    color: var(--bx-color-bg-surface);
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.nav-item:hover, .nav-item.active {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-divider {
+    display: block;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.5); /* Higher contrast */
+    margin: var(--bx-spacing-md) 0;
+    width: 100%;
+}
+
+/* Header */
+.app-header {
+    grid-row: 1;
+    grid-column: 2;
+    background-color: var(--bx-color-secondary);
+    color: var(--bx-color-bg-surface);
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--bx-spacing-xl);
+}
+
+/* Main Content */
+.app-content {
+    grid-row: 2;
+    grid-column: 2;
+    padding: var(--bx-spacing-xl);
+    overflow-y: auto;
+}
+
+/* Print Styles */
+@media print {
+    /* Hide non-printable elements */
+    .app-sidebar, 
+    .app-sidebar-header, 
+    .app-nav, 
+    .app-sidebar-footer,
+    .header-right,
+    button, 
+    .btn, 
+    a[href^="javascript"],
+    form .form-actions,
+    input[type="submit"],
+    .no-print {
+        display: none !important;
+    }
+
+    /* Reset Layout for Print */
+    .app-shell {
+        display: block;
+        height: auto;
+        overflow: visible;
+    }
+
+    .app-content {
+        padding: 0;
+        overflow: visible;
+        grid-column: 1 / -1;
+        grid-row: 1 / -1;
+    }
+
+    .app-header {
+        position: static;
+        border-bottom: 2px solid #000;
+        padding: 0;
+        margin-bottom: 20px;
+    }
+
+    .app-header h2 {
+        font-size: 24pt;
+        color: #000;
+        margin: 0;
+    }
+
+    /* Table Improvements */
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        page-break-inside: auto;
+    }
+    
+    tr {
+        page-break-inside: avoid; 
+        page-break-after: auto;
+    }
+
+    th, td {
+        border: 1px solid #ddd !important;
+        padding: 8px !important;
+        color: #000 !important;
+    }
+
+    /* Cards */
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+
+    body {
+        font-size: 12pt;
+        background: white !important;
+        color: black !important;
+    }
+}

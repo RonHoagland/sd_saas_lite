@@ -1,0 +1,63 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}Preferences - BrixaWares{% endblock %}
+{% block page_title %}System Preferences{% endblock %}
+
+{% block main_content %}
+<div class="card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border);">
+    {% for group_name, prefs in grouped_preferences.items %}
+        {% if prefs %}
+        <div style="margin-bottom: var(--bx-spacing-xl);">
+            <h3 style="margin-bottom: var(--bx-spacing-md); border-bottom: 2px solid var(--bx-color-border); padding-bottom: var(--bx-spacing-sm); color: var(--bx-color-primary);">{{ group_name }}</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="text-align: left; background: var(--bx-color-bg-surface); color: var(--bx-color-text-muted); font-size: 0.9em; text-transform: uppercase;">
+                        <th style="padding: 12px 16px; border-bottom: 1px solid var(--bx-color-border);">Name</th>
+
+                        <th style="padding: 12px 16px; border-bottom: 1px solid var(--bx-color-border); width: 45%;">Value</th>
+                        <th style="padding: 12px 16px; border-bottom: 1px solid var(--bx-color-border); width: 100px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in prefs %}
+                    <tr style="border-bottom: 1px solid var(--bx-color-border);">
+                        <td style="padding: 12px 16px;">
+                            <div style="font-weight: 500;">{{ p.name }}</div>
+                            <div style="font-size: 0.85em; color: var(--bx-color-text-muted);">{{ p.description }}</div>
+                        </td>
+
+                        <td style="padding: 12px 16px;">
+                            {% if p.data_type == 'boolean' %}
+                                {% if p.value|lower == 'true' %}
+                                <span style="color: var(--bx-color-success); font-weight: 600;">Yes</span>
+                                {% else %}
+                                <span style="color: var(--bx-color-danger); font-weight: 600;">No</span>
+                                {% endif %}
+                            {% else %}
+                                {% if p.data_type == 'password' %}
+                                    <span style="color: var(--bx-color-text-muted);">******</span>
+                                {% else %}
+                                    {{ p.value|truncatechars:50 }}
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px 16px;">
+                            {% if p.is_editable and not p.is_locked %}
+                            <a href="{% url 'preference_update' p.pk %}" style="color: var(--bx-color-primary); font-weight: 500; text-decoration: none;">Edit</a>
+                            {% else %}
+                            <span style="color: var(--bx-color-text-muted);">Locked</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    {% endfor %}
+    
+    <div style="margin-top: var(--bx-spacing-lg);">
+        <a href="{% url 'admin_home' %}" style="text-decoration: underline; color: var(--bx-color-text-muted);">Back to Admin</a>
+    </div>
+</div>
+{% endblock %}

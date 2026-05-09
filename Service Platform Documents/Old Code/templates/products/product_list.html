@@ -1,0 +1,156 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block page_title %}Product List{% endblock %}
+
+{% block main_content %}
+<!-- Main Container -->
+<div class="card" style="margin-top: 0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+    
+        <!-- Header / Actions Area -->
+    <div class="card-header" style="background-color: transparent; border-bottom: 1px solid var(--bx-color-border); padding: 1rem; display: flex; justify-content: flex-end; align-items: center;">
+        <!-- "New Record" Button in Standard Location -->
+        <a href="{% url 'product_create' %}" class="btn btn-sm" style="background-color: #1e3a8a; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.9rem; text-decoration: none;">
+            + New Record
+        </a>
+    </div>
+
+    <!-- Table -->
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background-color: #e5e7eb; color: var(--bx-color-text-main); font-weight: bold; border-bottom: 1px solid var(--bx-color-border);">
+                    <th style="padding: 1rem;">Action</th>
+                    
+                    <th style="padding: 1rem; cursor: pointer;" onclick="window.location.href='?sort=sku&direction={% if current_sort == 'sku' and current_direction == 'asc' %}desc{% else %}asc{% endif %}'">
+                        SKU
+                        {% if current_sort == 'sku' %}
+                            <span style="font-size: 0.8em; margin-left: 4px;">{% if current_direction == 'asc' %}&#9650;{% else %}&#9660;{% endif %}</span>
+                        {% endif %}
+                    </th>
+                    
+                    <th style="padding: 1rem; cursor: pointer;" onclick="window.location.href='?sort=name&direction={% if current_sort == 'name' and current_direction == 'asc' %}desc{% else %}asc{% endif %}'">
+                        Product Name
+                        {% if current_sort == 'name' %}
+                            <span style="font-size: 0.8em; margin-left: 4px;">{% if current_direction == 'asc' %}&#9650;{% else %}&#9660;{% endif %}</span>
+                        {% endif %}
+                    </th>
+                    
+                     <th style="padding: 1rem; cursor: pointer;" onclick="window.location.href='?sort=status&direction={% if current_sort == 'status' and current_direction == 'asc' %}desc{% else %}asc{% endif %}'">
+                        Status
+                        {% if current_sort == 'status' %}
+                            <span style="font-size: 0.8em; margin-left: 4px;">{% if current_direction == 'asc' %}&#9650;{% else %}&#9660;{% endif %}</span>
+                        {% endif %}
+                    </th>
+
+                    <th style="padding: 1rem; cursor: pointer;" onclick="window.location.href='?sort=category&direction={% if current_sort == 'category' and current_direction == 'asc' %}desc{% else %}asc{% endif %}'">
+                        Category
+                        {% if current_sort == 'category' %}
+                            <span style="font-size: 0.8em; margin-left: 4px;">{% if current_direction == 'asc' %}&#9650;{% else %}&#9660;{% endif %}</span>
+                        {% endif %}
+                    </th>
+
+                    <th style="padding: 1rem; cursor: pointer;" onclick="window.location.href='?sort=type&direction={% if current_sort == 'type' and current_direction == 'asc' %}desc{% else %}asc{% endif %}'">
+                        Type
+                        {% if current_sort == 'type' %}
+                            <span style="font-size: 0.8em; margin-left: 4px;">{% if current_direction == 'asc' %}&#9650;{% else %}&#9660;{% endif %}</span>
+                        {% endif %}
+                    </th>
+
+                     <th style="padding: 1rem; cursor: pointer;" onclick="window.location.href='?sort=stock&direction={% if current_sort == 'stock' and current_direction == 'asc' %}desc{% else %}asc{% endif %}'">
+                        Stock
+                        {% if current_sort == 'stock' %}
+                            <span style="font-size: 0.8em; margin-left: 4px;">{% if current_direction == 'asc' %}&#9650;{% else %}&#9660;{% endif %}</span>
+                        {% endif %}
+                    </th>
+
+                    <th style="padding: 1rem; cursor: pointer;" onclick="window.location.href='?sort=price&direction={% if current_sort == 'price' and current_direction == 'asc' %}desc{% else %}asc{% endif %}'">
+                        Price
+                        {% if current_sort == 'price' %}
+                            <span style="font-size: 0.8em; margin-left: 4px;">{% if current_direction == 'asc' %}&#9650;{% else %}&#9660;{% endif %}</span>
+                        {% endif %}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr style="border-bottom: 1px solid var(--bx-color-border); font-size: 0.95rem;">
+                    <!-- Action: View Button -->
+                    <td style="padding: 1rem;">
+                        <a href="{% url 'product_detail' pk=product.pk %}" class="btn btn-sm" style="background-color: #1e3a8a; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; text-decoration: none;">
+                            View &rarr;
+                        </a>
+                    </td>
+                    
+                    <!-- SKU -->
+                    <td style="padding: 1rem; color: var(--bx-color-text-muted);">
+                        {{ product.sku|default:"-" }}
+                    </td>
+
+                    <!-- Product Name -->
+                    <td style="padding: 1rem; font-weight: 500;">
+                        {{ product.name }}
+                    </td>
+                    
+                     <!-- Status Badge -->
+                    <td style="padding: 1rem;">
+                        <span style="
+                            padding: 0.25rem 0.75rem; 
+                            border-radius: 9999px; 
+                            font-size: 0.75rem; 
+                            font-weight: 600;
+                            {% if product.status == 'Active' %}
+                                background-color: #dcfce7; color: #166534;
+                            {% elif product.status == 'Low Stock' %}
+                                background-color: #fef9c3; color: #854d0e;
+                            {% elif product.status == 'Discontinued' %}
+                                background-color: #fee2e2; color: #991b1b;
+                            {% else %}
+                                background-color: #f3f4f6; color: #374151;
+                            {% endif %}
+                        ">
+                            {{ product.status }}
+                        </span>
+                    </td>
+
+                    <!-- Category -->
+                    <td style="padding: 1rem;">
+                        {{ product.category|default:"-" }}
+                    </td>
+
+                    <!-- Type -->
+                    <td style="padding: 1rem;">
+                        {{ product.product_type|default:"-" }}
+                    </td>
+                    
+                    <!-- Stock -->
+                    <td style="padding: 1rem;">
+                        {{ product.quantity_on_hand }}
+                    </td>
+
+                    <!-- Price -->
+                    <td style="padding: 1rem; font-weight: bold;">
+                        {% if product.price %}
+                            ${{ product.price }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="padding: 2rem; text-align: center; color: var(--bx-color-text-muted);">
+                        No products found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Footer / Pagination Placeholder -->
+    <div style="padding: 1rem; border-top: 1px solid var(--bx-color-border); background-color: #f9fafb; text-align: right; font-size: 0.9rem; color: var(--bx-color-text-muted);">
+        Total Records: <strong>{{ products.count }}</strong>
+    </div>
+
+</div>
+{% endblock %}

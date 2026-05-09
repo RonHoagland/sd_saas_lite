@@ -1,0 +1,106 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}Users - BrixaWares{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block main_content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--bx-spacing-lg);">
+    <h1>Users</h1>
+    <div style="display: flex; gap: 8px;">
+        <a href="{% url 'user_export' %}" class="btn" style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--bx-color-bg-surface); border: 1px solid var(--bx-color-border); color: var(--bx-color-text); padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none;">
+            <span>⬇ Export CSV</span>
+        </a>
+        <a href="{% url 'user_create' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--bx-color-primary); color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none;">
+            <span>+ Add User</span>
+        </a>
+    </div>
+</div>
+
+<div class="card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border);">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid var(--bx-color-border); text-align: left;">
+                <th style="padding: var(--bx-spacing-sm);">
+                    <a href="?sort=username&dir={% if current_sort == 'username' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 4px;">
+                        Username
+                        {% if current_sort == 'username' %}
+                            {% if current_dir == 'asc' %}↑{% else %}↓{% endif %}
+                        {% endif %}
+                    </a>
+                </th>
+                <th style="padding: var(--bx-spacing-sm);">
+                    <a href="?sort=full_name&dir={% if current_sort == 'full_name' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 4px;">
+                        Name
+                        {% if current_sort == 'full_name' %}
+                            {% if current_dir == 'asc' %}↑{% else %}↓{% endif %}
+                        {% endif %}
+                    </a>
+                </th>
+                <th style="padding: var(--bx-spacing-sm);">
+                    <a href="?sort=profile__position&dir={% if current_sort == 'profile__position' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 4px;">
+                        Position
+                        {% if current_sort == 'profile__position' %}
+                            {% if current_dir == 'asc' %}↑{% else %}↓{% endif %}
+                        {% endif %}
+                    </a>
+                </th>
+                <th style="padding: var(--bx-spacing-sm);">
+                    <a href="?sort=primary_role&dir={% if current_sort == 'primary_role' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 4px;">
+                        Roles
+                        {% if current_sort == 'primary_role' %}
+                            {% if current_dir == 'asc' %}↑{% else %}↓{% endif %}
+                        {% endif %}
+                    </a>
+                </th>
+                <th style="padding: var(--bx-spacing-sm);">
+                    <a href="?sort=email&dir={% if current_sort == 'email' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 4px;">
+                        Email
+                        {% if current_sort == 'email' %}
+                            {% if current_dir == 'asc' %}↑{% else %}↓{% endif %}
+                        {% endif %}
+                    </a>
+                </th>
+                <th style="padding: var(--bx-spacing-sm);">
+                    <a href="?sort=is_active&dir={% if current_sort == 'is_active' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 4px;">
+                        Status
+                        {% if current_sort == 'is_active' %}
+                            {% if current_dir == 'asc' %}↑{% else %}↓{% endif %}
+                        {% endif %}
+                    </a>
+                </th>
+                <th style="padding: var(--bx-spacing-sm);">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr style="border-bottom: 1px solid var(--bx-color-border);">
+                <td style="padding: var(--bx-spacing-sm);">{{ u.username }}</td>
+                <td style="padding: var(--bx-spacing-sm);">{{ u.get_full_name|default:"-" }}</td>
+                <td style="padding: var(--bx-spacing-sm);">{{ u.profile.position|default:"-" }}</td>
+                <td style="padding: var(--bx-spacing-sm);">
+                    {% for ur in u.user_roles.all %}
+                        <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 99px; font-size: 0.8em; margin-right: 4px;">{{ ur.role.name }}</span>
+                    {% empty %}
+                        <span style="color: var(--bx-color-text-muted); font-size: 0.9em;">-</span>
+                    {% endfor %}
+                </td>
+                <td style="padding: var(--bx-spacing-sm);">{{ u.email }}</td>
+                <td style="padding: var(--bx-spacing-sm);">
+                    {% if u.is_active %}
+                    <span style="color: var(--bx-color-success); font-weight: bold;">Active</span>
+                    {% else %}
+                    <span style="color: var(--bx-color-text-muted);">Inactive</span>
+                    {% endif %}
+                </td>
+                <td style="padding: var(--bx-spacing-sm);">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <a href="{% url 'user_detail' u.pk %}" style="color: var(--bx-color-primary); font-weight: 500;">Edit</a>
+                        <a href="{% url 'user_delete' u.pk %}" style="color: var(--bx-color-danger); font-weight: 500; font-size: 0.9em;">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

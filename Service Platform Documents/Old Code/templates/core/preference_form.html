@@ -1,0 +1,75 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}Edit Preference - BrixaWares{% endblock %}
+{% block page_title %}Edit Preference: {{ pref.name }}{% endblock %}
+
+{% block main_content %}
+<div class="card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border); max-width: 600px;">
+    
+    <div style="margin-bottom: var(--bx-spacing-lg);">
+        <p style="color: var(--bx-color-text-muted);">{{ pref.description }}</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: var(--bx-spacing-lg);">
+            <label for="id_value" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Value</label>
+            
+            {% if widget_type == 'select' %}
+                <select name="value" id="id_value" style="width: 100%; padding: 0.5rem; border: 1px solid var(--bx-color-border); border-radius: 4px; background: white;">
+                    {% for k, v in choices %}
+                    <option value="{{ k }}" {% if k == pref.value %}selected{% endif %}>{{ v }}</option>
+                    {% endfor %}
+                </select>
+            {% elif widget_type == 'textarea' %}
+                <textarea name="value" id="id_value" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid var(--bx-color-border); border-radius: 4px;">{{ pref.value }}</textarea>
+            {% elif widget_type == 'file' %}
+                <input type="file" name="value" id="id_value" style="width: 100%; padding: 0.5rem; border: 1px solid var(--bx-color-border); border-radius: 4px;">
+                {% if pref.value %}
+                <div style="margin-top: 8px; font-size: 0.9em;">
+                    Current: <a href="{{ pref.value }}" target="_blank" style="color: var(--bx-color-primary);">{{ pref.value }}</a>
+                </div>
+                {% endif %}
+            {% elif widget_type == 'password' %}
+                <div style="position: relative;">
+                    <input type="password" name="value" id="id_value" value="{{ pref.value }}" style="width: 100%; padding: 0.5rem; padding-right: 40px; border: 1px solid var(--bx-color-border); border-radius: 4px;">
+                    <button type="button" onclick="togglePasswordVisibility()" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--bx-color-text-muted);">
+                        <!-- Simple Eye Icon (SVG) -->
+                        <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                    </button>
+                </div>
+                <script>
+                    function togglePasswordVisibility() {
+                        const input = document.getElementById('id_value');
+                        const eye = document.getElementById('eye-icon');
+                        const eyeOff = document.getElementById('eye-off-icon');
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            eye.style.display = 'none';
+                            eyeOff.style.display = 'block';
+                        } else {
+                            input.type = 'password';
+                            eye.style.display = 'block';
+                            eyeOff.style.display = 'none';
+                        }
+                    }
+                </script>
+            {% else %}
+                <input type="text" name="value" id="id_value" value="{{ pref.value }}" style="width: 100%; padding: 0.5rem; border: 1px solid var(--bx-color-border); border-radius: 4px;">
+            {% endif %}
+
+            <div style="font-size: 0.85em; color: var(--bx-color-text-muted); margin-top: 0.25rem;">Default: {{ pref.default_value }}</div>
+        </div>
+
+        <div style="display: flex; gap: var(--bx-spacing-md);">
+            <button type="submit" style="padding: 0.75rem 1.5rem; background-color: var(--bx-color-primary); color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                Save Changes
+            </button>
+            <a href="{% url 'preference_list' %}" style="padding: 0.75rem 1.5rem; border: 1px solid var(--bx-color-border); border-radius: 4px; background: white; text-align: center;">Cancel</a>
+        </div>
+    </form>
+
+</div>
+{% endblock %}

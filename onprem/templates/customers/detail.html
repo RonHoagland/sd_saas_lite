@@ -1,0 +1,103 @@
+{% extends "_section_base.html" %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <a href="{% url 'customers' %}">Customers</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">{{ customer.company_name|default:customer.customer_number }}</span>
+{% endblock %}
+
+{% block section_subtitle %}
+  <p class="small text-body-secondary mb-0 mt-1">
+    Customer · {{ customer.customer_number|default:"unassigned #" }}
+  </p>
+{% endblock %}
+
+{% block section_actions %}
+  <a href="{% url 'customers' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+    <i data-lucide="arrow-left"></i> Back
+  </a>
+{% endblock %}
+
+{% block section_body %}
+<div class="row g-3">
+
+  <div class="col-12 col-lg-8">
+    <div class="sd-section-card p-4 mb-3">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Customer Information</h2>
+      <dl class="row g-3 mb-0 small">
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Name</dt>
+          <dd class="mb-0">{{ customer.company_name|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Customer #</dt>
+          <dd class="mb-0">{{ customer.customer_number|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Account Type</dt>
+          <dd class="mb-0">{{ customer.account_type }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Status</dt>
+          <dd class="mb-0">{{ customer.status }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Customer Since</dt>
+          <dd class="mb-0">{{ customer.customer_since|date:"M j, Y"|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Assigned To</dt>
+          <dd class="mb-0">{{ customer.assigned_to.username|default:"—" }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="sd-section-card p-4">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Financial</h2>
+      <dl class="row g-3 mb-0 small">
+        <div class="col-12 col-md-4">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Account Terms</dt>
+          <dd class="mb-0">{{ customer.account_terms|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-4">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Credit Limit</dt>
+          <dd class="mb-0">${{ customer.credit_limit|floatformat:2 }}</dd>
+        </div>
+        <div class="col-12 col-md-4">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Credit Status</dt>
+          <dd class="mb-0">{{ customer.credit_status }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Tax Exempt</dt>
+          <dd class="mb-0">{% if customer.tax_exempt %}Yes{% else %}No{% endif %}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Tax Rate</dt>
+          <dd class="mb-0">{% if customer.tax_rate %}{{ customer.tax_rate }}%{% else %}—{% endif %}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="sd-section-card p-4 mb-3">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Activity Summary</h2>
+      <div class="small text-body-secondary">
+        Activity timeline + linked records (assets, jobs, quotes, invoices) wired in Phase 2.3.
+      </div>
+    </div>
+
+    <div class="sd-section-card p-4">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Record Info</h2>
+      <div class="small text-body-secondary">
+        <div>Created {{ customer.created_on|date:"M j, Y" }} by {{ customer.created_by|default:"system" }}</div>
+        <div>Updated {{ customer.updated_on|date:"M j, Y" }} by {{ customer.updated_by|default:"system" }}</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

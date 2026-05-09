@@ -1,0 +1,76 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}{{ value_list.name }} - Value Lists{% endblock %}
+{% block page_title %}
+    <span style="color: var(--bx-color-text-muted); font-weight: 400;">Value List:</span> {{ value_list.name }}
+{% endblock %}
+
+{% block main_content %}
+<div style="margin-bottom: var(--bx-spacing-lg);">
+    <a href="{% url 'value_list_list' %}" style="color: var(--bx-color-text-muted); text-decoration: none;">&larr; Back to Lists</a>
+</div>
+
+<div class="card" style="background: white; border-radius: 8px; border: 1px solid var(--bx-color-border); overflow: hidden; margin-bottom: var(--bx-spacing-xl);">
+    <div style="padding: var(--bx-spacing-lg); border-bottom: 1px solid var(--bx-color-border);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h2 style="font-size: var(--bx-font-size-md); font-weight: 600; margin: 0 0 8px 0;">Details</h2>
+                <p style="margin: 0; color: var(--bx-color-text-muted);">{{ value_list.description }}</p>
+            </div>
+            <div style="display: flex; gap: 16px;">
+                <a href="{% url 'value_list_update' value_list.slug %}" style="font-size: 13px; color: var(--bx-color-primary); text-decoration: none;">Rename / Edit Description</a>
+                <a href="{% url 'value_list_delete' value_list.slug %}" style="font-size: 13px; color: var(--bx-color-danger); text-decoration: none;">Delete List</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="background: white; border-radius: 8px; border: 1px solid var(--bx-color-border); overflow: hidden;">
+    <div style="padding: var(--bx-spacing-lg); border-bottom: 1px solid var(--bx-color-border); display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-size: var(--bx-font-size-md); font-weight: 600; margin: 0;">Dropdown Options</h2>
+        <a href="{% url 'value_item_create' value_list.slug %}" class="btn btn-primary" style="background: var(--bx-color-primary); color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: var(--bx-font-size-sm);">
+            + Add Option
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        {% if items %}
+        <table style="width: 100%; border-collapse: collapse; font-size: var(--bx-font-size-sm);">
+            <thead style="background: var(--bx-color-bg-body); border-bottom: 1px solid var(--bx-color-border);">
+                <tr>
+                    <th style="padding: 12px 24px; text-align: left; color: var(--bx-color-text-muted); font-weight: 500;">Option Value</th>
+                    <th style="padding: 12px 24px; text-align: center; color: var(--bx-color-text-muted); font-weight: 500;">Sort Order</th>
+                    <th style="padding: 12px 24px; text-align: center; color: var(--bx-color-text-muted); font-weight: 500;">Active</th>
+                    <th style="padding: 12px 24px; text-align: right; color: var(--bx-color-text-muted); font-weight: 500;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr style="border-bottom: 1px solid var(--bx-color-border); {% if not item.is_active %}background: #fcfcfc; color: var(--bx-color-text-muted);{% endif %}">
+                    <td style="padding: 16px 24px; font-weight: 500;">
+                        {{ item.value }}
+                    </td>
+                    <td style="padding: 16px 24px; text-align: center;">{{ item.sort_order }}</td>
+                    <td style="padding: 16px 24px; text-align: center;">
+                        {% if item.is_active %}
+                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                        {% else %}
+                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 16px 24px; text-align: right;">
+                        <a href="{% url 'value_item_update' value_list.slug item.pk %}" style="color: var(--bx-color-text-muted); text-decoration: none;">Edit</a>
+                        <a href="{% url 'value_item_delete' value_list.slug item.pk %}" style="color: var(--bx-color-danger); text-decoration: none; margin-left: 12px;">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 48px; text-align: center; color: var(--bx-color-text-muted);">
+            <p>No options defined. Add one to start.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

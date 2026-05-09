@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=4">
+{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+        {% if logo_url %}
+        <div class="app-sidebar-logo">
+            <img src="{{ logo_url }}" alt="Company Logo">
+        </div>
+        {% endif %}
+        <div class="app-sidebar-header">
+            BrixaWares
+        </div>
+        <nav class="app-nav">
+            <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                Home
+            </a>
+            
+            <a href="{% url 'client_list' %}" class="nav-item {% if 'clients/' in request.path %}active{% endif %}">
+                Clients
+            </a>
+            <a href="{% url 'product_list' %}" class="nav-item">
+                Products
+            </a>
+            
+            {% if user.is_staff or user.is_superuser %}
+            <div class="nav-divider"></div>
+            <a href="{% url 'admin_home' %}" class="nav-item {% if 'admin-area' in request.path %}active{% endif %}">
+                Admin Area
+            </a>
+            {% endif %}
+        </nav>
+        <div class="app-sidebar-footer">
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="nav-item" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer;">Logout</button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <!-- Breadcrumbs or page title could go here -->
+            <h2>{% block page_title %}{% endblock %}</h2>
+        </div>
+        <div class="header-right">
+            <a href="{% url 'my_profile' %}" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                <span>{{ user.username }}</span>
+                <span style="font-size: 0.8em; opacity: 0.8;">(My Profile)</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+        {% block main_content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

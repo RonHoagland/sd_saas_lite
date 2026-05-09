@@ -1,0 +1,94 @@
+{% extends "_section_base.html" %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <a href="{% url 'requests' %}">Service Requests</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">{{ service_request.request_number|default:"Request" }}</span>
+{% endblock %}
+
+{% block section_subtitle %}
+  <p class="small text-body-secondary mb-0 mt-1">
+    Service Request · {{ service_request.request_number|default:"unassigned #" }} · <span>{{ service_request.status }}</span>
+  </p>
+{% endblock %}
+
+{% block section_actions %}
+  <a href="{% url 'requests' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+    <i data-lucide="arrow-left"></i> Back
+  </a>
+{% endblock %}
+
+{% block section_body %}
+<div class="row g-3">
+
+  <div class="col-12 col-lg-8">
+    <div class="sd-section-card p-4">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Request Details</h2>
+      <dl class="row g-3 mb-0 small">
+        <div class="col-12">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Subject</dt>
+          <dd class="mb-0">{{ service_request.subject }}</dd>
+        </div>
+        {% if service_request.description %}
+        <div class="col-12">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Description</dt>
+          <dd class="mb-0" style="white-space:pre-wrap;">{{ service_request.description }}</dd>
+        </div>
+        {% endif %}
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Status</dt>
+          <dd class="mb-0">{{ service_request.status }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Priority</dt>
+          <dd class="mb-0">{{ service_request.priority }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Requested Date</dt>
+          <dd class="mb-0">{{ service_request.requested_date|date:"M j, Y"|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Resolved Date</dt>
+          <dd class="mb-0">{{ service_request.resolved_date|date:"M j, Y"|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Assigned To</dt>
+          <dd class="mb-0">{{ service_request.assigned_to.username|default:"—" }}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="sd-section-card p-4 mb-3">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Linked Records</h2>
+      <dl class="small mb-0">
+        <dt class="form-label small fw-medium text-body-secondary mb-1">Customer</dt>
+        <dd class="mb-2">
+          {% if service_request.customer %}
+            <a href="{% url 'customer-detail' service_request.customer.pk %}" class="link-brand text-decoration-none">{{ service_request.customer }}</a>
+          {% else %}—{% endif %}
+        </dd>
+        <dt class="form-label small fw-medium text-body-secondary mb-1">Asset</dt>
+        <dd class="mb-0">
+          {% if service_request.asset %}
+            <a href="{% url 'asset-detail' service_request.asset.pk %}" class="link-brand text-decoration-none">{{ service_request.asset }}</a>
+          {% else %}—{% endif %}
+        </dd>
+      </dl>
+    </div>
+
+    <div class="sd-section-card p-4">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Record Info</h2>
+      <div class="small text-body-secondary">
+        <div>Created {{ service_request.created_on|date:"M j, Y" }} by {{ service_request.created_by|default:"system" }}</div>
+        <div>Updated {{ service_request.updated_on|date:"M j, Y" }} by {{ service_request.updated_by|default:"system" }}</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

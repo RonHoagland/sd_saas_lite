@@ -1,0 +1,110 @@
+{% load static %}
+{% comment %}
+  ServizDesk Lite sidebar.
+
+  Tier-aware visibility per LITE_DECISIONS.md §H: the nav lists every feature
+  the product supports across tiers, and hides items not available in the
+  current tenant's tier. For Lite-only deployments (this repo), we list
+  Lite-scoped items directly. Higher-tier items get wrapped in
+  tier_has_feature checks when multi-tier support is wired in.
+
+  Context variables used:
+    active_nav       — slug matching one of the nav items ('dashboard', 'customers', ...)
+    is_admin         — bool, gates Settings section
+    is_system_user   — bool, gates ServizDesk staff admin link
+    request.user     — for the footer user block
+    role             — string label, defaults to "User"
+{% endcomment %}
+<aside class="sd-sidebar" aria-label="Main navigation">
+
+  <div class="sd-sidebar-brand">
+    <div class="sd-sidebar-brand-mark">SD</div>
+    <div class="sd-sidebar-brand-name">ServizDesk</div>
+    <span class="sd-sidebar-tier-badge">Lite</span>
+  </div>
+
+  <nav class="sd-sidebar-nav">
+
+    {# Primary — core Lite pipeline (spec §3 plus Requests as a top-level shortcut) #}
+    <a class="sd-nav-item {% if active_nav == 'dashboard' %}active{% endif %}" href="{% url 'home' %}">
+      <i data-lucide="layout-dashboard"></i> Dashboard
+    </a>
+    <a class="sd-nav-item {% if active_nav == 'customers' %}active{% endif %}" href="{% url 'customers' %}">
+      <i data-lucide="users"></i> Customers
+    </a>
+    <a class="sd-nav-item {% if active_nav == 'assets' %}active{% endif %}" href="{% url 'assets' %}">
+      <i data-lucide="box"></i> Assets
+    </a>
+    <a class="sd-nav-item {% if active_nav == 'jobs' %}active{% endif %}" href="{% url 'jobs' %}">
+      <i data-lucide="clipboard-list"></i> Jobs
+    </a>
+    <a class="sd-nav-item {% if active_nav == 'requests' %}active{% endif %}" href="{% url 'requests' %}">
+      <i data-lucide="inbox"></i> Requests
+    </a>
+    <a class="sd-nav-item {% if active_nav == 'schedule' %}active{% endif %}" href="{% url 'schedule' %}">
+      <i data-lucide="calendar"></i> Schedule
+    </a>
+    <a class="sd-nav-item {% if active_nav == 'quotes' %}active{% endif %}" href="{% url 'quotes' %}">
+      <i data-lucide="file-text"></i> Quotes
+    </a>
+    <a class="sd-nav-item {% if active_nav == 'invoices' %}active{% endif %}" href="{% url 'invoices' %}">
+      <i data-lucide="receipt"></i> Invoices
+    </a>
+    <a class="sd-nav-item {% if active_nav == 'payments' %}active{% endif %}" href="{% url 'payments' %}">
+      <i data-lucide="credit-card"></i> Payments
+    </a>
+
+    <div class="sd-sidebar-divider"></div>
+
+    {# Secondary — supporting Lite features #}
+    <a class="sd-nav-item {% if active_nav == 'tasks' %}active{% endif %}" href="#">
+      <i data-lucide="check-square"></i> Tasks
+    </a>
+    <a class="sd-nav-item {% if active_nav == 'time' %}active{% endif %}" href="#">
+      <i data-lucide="clock"></i> Time Tracking
+    </a>
+    <a class="sd-nav-item {% if active_nav == 'products' %}active{% endif %}" href="#">
+      <i data-lucide="package"></i> Products &amp; Services
+    </a>
+
+    {% comment %}
+      Higher-tier items (Plus/Pro/Enterprise) are added here later, each
+      wrapped in a tier_has_feature check. Examples:
+        - Leads, Opportunities (Plus sales pipeline)
+        - Preventative Maintenance (Plus)
+        - Workflows, Agreements, Safety Forms (Pro)
+        - Inventory, Purchasing, Vendors, Warehouses (Pro/Enterprise)
+        - Fleet, Procurement, RMAs (Enterprise)
+    {% endcomment %}
+
+  </nav>
+
+  {% if is_admin or is_system_user %}
+  <div class="sd-sidebar-footer">
+    <p class="sd-sidebar-section-label">Settings</p>
+    <a class="sd-nav-item {% if active_nav == 'tenant-preferences' %}active{% endif %}" href="{% url 'tenant-preferences' %}">
+      <i data-lucide="building-2"></i> Company Settings
+    </a>
+    <a class="sd-nav-item {% if active_nav == 'users' %}active{% endif %}" href="{% url 'employees' %}">
+      <i data-lucide="user-cog"></i> Users
+    </a>
+    {% if is_system_user %}
+    <a class="sd-nav-item {% if active_nav == 'admin' %}active{% endif %}" href="{% url 'admin:index' %}">
+      <i data-lucide="shield"></i> Django Admin
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="sd-sidebar-user">
+    <div class="sd-sidebar-user-avatar">{{ request.user.username|slice:":2"|upper }}</div>
+    <div class="flex-grow-1 text-truncate">
+      <div class="sd-sidebar-user-name text-truncate">{{ request.user.get_full_name|default:request.user.username }}</div>
+      <div class="sd-sidebar-user-role text-truncate">{{ role|default:"User" }}</div>
+    </div>
+    <a class="sd-util-btn" href="{% url 'logout' %}" title="Sign Out" aria-label="Sign Out" style="color:#cbd5e1;">
+      <i data-lucide="log-out"></i>
+    </a>
+  </div>
+
+</aside>

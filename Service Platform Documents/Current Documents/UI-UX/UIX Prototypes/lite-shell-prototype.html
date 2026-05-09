@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ServizDesk Lite — UIX Shell Prototype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    html, body { height: 100%; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; -webkit-font-smoothing: antialiased; }
+    .util-btn { display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:8px; color:#475569; }
+    .util-btn:hover { background:#f1f5f9; color:#0f172a; }
+    [data-lucide] { width:18px; height:18px; stroke-width:1.75; }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:500; }
+    .chip { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:6px; font-size:13px; border:1px solid #e2e8f0; background:#fff; color:#334155; }
+    .chip:hover { background:#f8fafc; }
+    .chip [data-lucide] { width:14px; height:14px; }
+    .btn-primary { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:6px; background:#2563eb; color:#fff; font-size:14px; font-weight:500; }
+    .btn-primary:hover { background:#1d4ed8; }
+    .btn-secondary { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:6px; background:#fff; color:#334155; font-size:14px; font-weight:500; border:1px solid #e2e8f0; }
+    .btn-secondary:hover { background:#f8fafc; }
+    .btn-primary [data-lucide], .btn-secondary [data-lucide] { width:16px; height:16px; }
+    .stat-card { position:relative; background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:16px 18px; overflow:hidden; }
+    .stat-card::before { content:""; position:absolute; left:0; top:0; right:0; height:3px; background:var(--accent); }
+    .table-row:hover { background:#f8fafc; }
+    .field-label { display:block; font-size:12px; font-weight:500; color:#64748b; margin-bottom:4px; }
+    .field-value { font-size:14px; color:#0f172a; }
+    .section-card { background:#fff; border:1px solid #e2e8f0; border-radius:10px; }
+    .toggle { position:relative; display:inline-block; width:32px; height:18px; background:#22c55e; border-radius:999px; }
+    .toggle::after { content:""; position:absolute; top:2px; right:2px; width:14px; height:14px; background:#fff; border-radius:50%; }
+    .toggle.off { background:#cbd5e1; }
+    .toggle.off::after { left:2px; right:auto; }
+
+    /* Login split-screen */
+    .login-input { width:100%; height:40px; border:1px solid #e2e8f0; border-radius:8px; padding:0 12px; font-size:14px; background:#fff; }
+    .login-input:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.12); }
+
+    /* View switching */
+    body[data-view="login"] #app-shell { display:none; }
+    body[data-view="app"]   #login-view { display:none; }
+
+    /* Sidebar nav (wide mode) */
+    .nav-item { display:flex; align-items:center; gap:10px; width:100%; padding:7px 12px; font-size:13.5px; color:#cbd5e1; border-radius:6px; text-align:left; cursor:pointer; }
+    .nav-item:hover { background:#1e293b; color:#fff; }
+    .nav-item.active { background:#2563eb; color:#fff; font-weight:500; }
+    .nav-item [data-lucide] { width:18px; height:18px; stroke-width:1.75; flex-shrink:0; }
+
+    .nav-group { display:flex; align-items:center; width:100%; padding:7px 12px; font-size:13.5px; color:#94a3b8; border-radius:6px; text-align:left; cursor:pointer; text-transform:uppercase; letter-spacing:0.04em; font-weight:500; }
+    .nav-group:hover { color:#fff; background:#1e293b; }
+    .nav-group [data-lucide] { width:16px; height:16px; stroke-width:1.75; flex-shrink:0; }
+    .nav-group-label { display:flex; align-items:center; gap:10px; flex:1; font-size:12px; }
+    .group-chevron { width:14px; height:14px; transition:transform 0.18s; color:#64748b; }
+    .nav-group[aria-expanded="true"] .group-chevron { transform:rotate(180deg); color:#cbd5e1; }
+    .nav-group-items { overflow:hidden; max-height:0; transition:max-height 0.2s ease-out; padding-left:22px; }
+    .nav-group-items.open { max-height:600px; }
+    .nav-sub { display:block; padding:6px 10px 6px 14px; font-size:13px; color:#94a3b8; border-radius:4px; border-left:2px solid transparent; cursor:pointer; }
+    .nav-sub:hover { background:#1e293b; color:#fff; }
+    .nav-sub.active { color:#fff; background:#1e293b; border-left-color:#60a5fa; font-weight:500; }
+
+    /* Editable sections (inline edit pattern) */
+    .section-card.editable { position:relative; transition:box-shadow .18s, border-color .18s; }
+    .section-pencil { position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:6px; color:#64748b; display:flex; align-items:center; justify-content:center; cursor:pointer; background:transparent; border:1px solid transparent; z-index:1; }
+    .section-pencil:hover { background:#f1f5f9; color:#0f172a; border-color:#e2e8f0; }
+    .section-pencil [data-lucide] { width:14px; height:14px; }
+    .section-card .edit-mode { display:none; }
+    .section-card.editing .view-mode { display:none; }
+    .section-card.editing .edit-mode { display:block; }
+    .section-card.editing { box-shadow:0 0 0 2px #2563eb, 0 4px 16px rgba(37,99,235,0.1); border-color:#2563eb; }
+    .section-card.editing .section-pencil { display:none; }
+    .edit-footer { display:flex; align-items:center; justify-content:flex-end; gap:8px; padding-top:16px; margin-top:16px; border-top:1px solid #f1f5f9; }
+    .edit-footer .dirty-hint { margin-right:auto; font-size:12px; color:#d97706; display:flex; align-items:center; gap:5px; }
+
+    /* Form inputs */
+    .input-sm, .select-sm { width:100%; height:38px; border:1px solid #e2e8f0; border-radius:6px; padding:0 10px; font-size:14px; background:#fff; color:#0f172a; }
+    .input-sm:focus, .select-sm:focus, .textarea-sm:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.12); }
+    .textarea-sm { width:100%; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; font-size:14px; min-height:80px; resize:vertical; color:#0f172a; background:#fff; font-family:inherit; }
+    .field-label-req::after { content:" *"; color:#ef4444; }
+
+    /* Drawer */
+    .drawer { position:fixed; inset:0; z-index:40; visibility:hidden; }
+    .drawer.open { visibility:visible; }
+    .drawer-backdrop { position:absolute; inset:0; background:rgba(15,23,42,0.4); opacity:0; transition:opacity .2s; }
+    .drawer.open .drawer-backdrop { opacity:1; }
+    .drawer-panel { position:absolute; right:0; top:0; bottom:0; width:560px; max-width:92vw; background:#fff; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .24s ease-out; box-shadow:-4px 0 24px rgba(0,0,0,0.15); }
+    .drawer.open .drawer-panel { transform:translateX(0); }
+    .drawer-header { height:56px; padding:0 20px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+    .drawer-body { flex:1; overflow-y:auto; padding:20px; background:#f8fafc; }
+    .drawer-footer { padding:14px 20px; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:8px; flex-shrink:0; background:#fff; }
+
+    /* Line-item drawer row */
+    .li-row { background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:10px; }
+    .li-row-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .li-grid { display:grid; grid-template-columns:1fr 80px 110px 110px; gap:8px; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800" data-view="login">
+
+  <!-- ============ LOGIN VIEW (shell hidden) ============ -->
+  <div id="login-view" class="h-screen w-screen flex">
+    <!-- Left: branding + sign-in form -->
+    <div class="w-1/2 bg-white flex flex-col px-12 py-10">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-md bg-blue-600 flex items-center justify-center font-bold text-white">SD</div>
+          <div>
+            <div class="text-[15px] font-semibold text-slate-900 leading-tight">ServizDesk</div>
+            <div class="text-xs text-slate-500">v1.9 Lite</div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-500 mt-2" id="login-date">—</p>
+      </div>
+
+      <div class="flex-1 flex items-center">
+        <div class="w-full max-w-sm mx-auto">
+          <h1 class="text-2xl font-semibold text-slate-900 mb-1">Sign in</h1>
+          <p class="text-sm text-slate-500 mb-6">Enter your credentials to continue</p>
+
+          <form id="login-form" class="space-y-4">
+            <div>
+              <label class="field-label" for="username">Username</label>
+              <input id="username" name="username" class="login-input" type="text" autocomplete="username" autofocus />
+            </div>
+            <div>
+              <label class="field-label" for="password">Password</label>
+              <input id="password" name="password" class="login-input" type="password" autocomplete="current-password" />
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <label class="flex items-center gap-2 text-slate-600"><input type="checkbox" name="remember" class="rounded" /> Remember me</label>
+              <a href="#" class="text-blue-600 hover:underline">Forgot password?</a>
+            </div>
+            <button type="submit" class="w-full h-10 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm">Sign In</button>
+          </form>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-relaxed">By signing in you agree to the ServizDesk Terms of Service and Privacy Policy. Unauthorized access is prohibited.</p>
+    </div>
+
+    <!-- Right: tenant branding + news -->
+    <div class="w-1/2 bg-blue-600 text-white flex items-center justify-center px-12 py-10 relative overflow-hidden">
+      <div class="absolute inset-0 opacity-20" style="background:radial-gradient(circle at 20% 20%, #fff 0, transparent 40%), radial-gradient(circle at 80% 80%, #fff 0, transparent 35%)"></div>
+      <div class="relative max-w-md text-center">
+        <div class="w-20 h-20 rounded-xl bg-white/15 backdrop-blur mx-auto flex items-center justify-center mb-5">
+          <i data-lucide="building-2" style="width:36px;height:36px"></i>
+        </div>
+        <h2 class="text-3xl font-semibold tracking-tight mb-2">Navy Island LLC</h2>
+        <div class="h-px w-16 bg-white/40 mx-auto my-5"></div>
+        <h3 class="text-lg font-semibold mb-4">Tenant Company News</h3>
+        <div class="space-y-3 text-sm text-white/85 text-left">
+          <p><span class="font-medium text-white">Welcome to ServizDesk Lite.</span> Your workspace is ready — dashboard counters, customer records, quotes, work orders, and invoicing are all live.</p>
+          <p><span class="font-medium text-white">Stripe connected.</span> Payment links will be auto-generated for every invoice you issue.</p>
+          <p><span class="font-medium text-white">Reminder:</span> you have 2 open quotes that haven't been sent. Check the dashboard after signing in.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DRAWER (right-slide) ============ -->
+  <div id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-backdrop" data-drawer-close></div>
+    <div class="drawer-panel" role="dialog" aria-labelledby="drawer-title">
+      <div class="drawer-header">
+        <div>
+          <h3 id="drawer-title" class="text-base font-semibold text-slate-900">Edit</h3>
+          <p id="drawer-subtitle" class="text-xs text-slate-500"></p>
+        </div>
+        <button class="util-btn" data-drawer-close title="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer-body" id="drawer-body"></div>
+      <div class="drawer-footer">
+        <button class="btn-secondary" data-drawer-close>Cancel</button>
+        <button class="btn-primary" data-drawer-save><i data-lucide="check"></i> Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ APP SHELL ============ -->
+  <div id="app-shell" class="flex h-screen overflow-hidden">
+
+    <!-- ============ A. LEFT SIDEBAR (wide, with accordion groups) ============ -->
+    <aside id="sidebar" class="w-60 bg-slate-950 text-slate-300 flex flex-col flex-shrink-0">
+      <!-- brand header -->
+      <div class="h-14 border-b border-slate-800 flex items-center gap-2.5 px-4 flex-shrink-0">
+        <div class="h-8 w-8 rounded-md bg-blue-600 flex items-center justify-center font-bold text-white text-sm">SD</div>
+        <div class="font-semibold text-white text-[15px] leading-none">ServizDesk</div>
+        <span class="ml-auto text-[10px] text-slate-500 uppercase tracking-wide">Lite</span>
+      </div>
+
+      <!-- main nav scroll area -->
+      <nav class="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
+
+        <!-- Dashboard (flat) -->
+        <a class="nav-item" data-route="dashboard" data-nav="dashboard">
+          <i data-lucide="layout-dashboard"></i> Dashboard
+        </a>
+
+        <div class="h-px bg-slate-800 my-2 mx-2"></div>
+
+        <!-- Customers group -->
+        <button class="nav-group" data-group="customers">
+          <span class="nav-group-label"><i data-lucide="users"></i> Customers</span>
+          <i data-lucide="chevron-down" class="group-chevron"></i>
+        </button>
+        <div class="nav-group-items" data-group-items="customers">
+          <a class="nav-sub" data-route="customers"   data-nav="customers">Contacts</a>
+          <a class="nav-sub" data-route="assets"      data-nav="assets">Assets</a>
+          <a class="nav-sub" data-route="preventative" data-nav="preventative">Preventative Maint.</a>
+        </div>
+
+        <!-- Work group -->
+        <button class="nav-group" data-group="work">
+          <span class="nav-group-label"><i data-lucide="briefcase"></i> Work</span>
+          <i data-lucide="chevron-down" class="group-chevron"></i>
+        </button>
+        <div class="nav-group-items" data-group-items="work">
+          <a class="nav-sub" data-route="schedules"   data-nav="schedules">Schedules</a>
+          <a class="nav-sub" data-route="requests"    data-nav="requests">Requests</a>
+          <a class="nav-sub" data-route="work-orders" data-nav="work-orders">Work Orders</a>
+          <a class="nav-sub" data-route="work-groups" data-nav="work-groups">Work Groups</a>
+        </div>
+
+        <!-- Sales group -->
+        <button class="nav-group" data-group="sales">
+          <span class="nav-group-label"><i data-lucide="trending-up"></i> Sales</span>
+          <i data-lucide="chevron-down" class="group-chevron"></i>
+        </button>
+        <div class="nav-group-items" data-group-items="sales">
+          <a class="nav-sub" data-route="leads"         data-nav="leads">Leads</a>
+          <a class="nav-sub" data-route="opportunities" data-nav="opportunities">Opportunities</a>
+          <a class="nav-sub" data-route="quotes"        data-nav="quotes">Quotes</a>
+          <a class="nav-sub" data-route="invoices"      data-nav="invoices">Invoices</a>
+          <a class="nav-sub" data-route="payments"      data-nav="payments">Payments</a>
+        </div>
+
+        <!-- Inventory group -->
+        <button class="nav-group" data-group="inventory">
+          <span class="nav-group-label"><i data-lucide="package"></i> Inventory</span>
+          <i data-lucide="chevron-down" class="group-chevron"></i>
+        </button>
+        <div class="nav-group-items" data-group-items="inventory">
+          <a class="nav-sub" data-route="parts"      data-nav="parts">Parts</a>
+          <a class="nav-sub" data-route="services"   data-nav="services">Services</a>
+          <a class="nav-sub" data-route="purchasing" data-nav="purchasing">Purchasing</a>
+          <a class="nav-sub" data-route="receiving"  data-nav="receiving">Receiving</a>
+          <a class="nav-sub" data-route="checkinout" data-nav="checkinout">Check In/Out</a>
+          <a class="nav-sub" data-route="vendors"    data-nav="vendors">Vendors</a>
+        </div>
+
+        <!-- Operations group -->
+        <button class="nav-group" data-group="operations">
+          <span class="nav-group-label"><i data-lucide="building-2"></i> Operations</span>
+          <i data-lucide="chevron-down" class="group-chevron"></i>
+        </button>
+        <div class="nav-group-items" data-group-items="operations">
+          <a class="nav-sub" data-route="employees"   data-nav="employees">Employees</a>
+          <a class="nav-sub" data-route="fleet"       data-nav="fleet">Fleet</a>
+          <a class="nav-sub" data-route="warehouses"  data-nav="warehouses">Warehouses</a>
+          <a class="nav-sub" data-route="agreements"  data-nav="agreements">Agreements</a>
+          <a class="nav-sub" data-route="workflows"   data-nav="workflows">Workflows</a>
+          <a class="nav-sub" data-route="safety"      data-nav="safety">Safety Forms</a>
+          <a class="nav-sub" data-route="billing"     data-nav="billing">Billing</a>
+          <a class="nav-sub" data-route="rma"         data-nav="rma">RMA</a>
+        </div>
+
+        <div class="h-px bg-slate-800 my-2 mx-2"></div>
+
+        <!-- Reports (flat) -->
+        <a class="nav-item" data-route="reports" data-nav="reports">
+          <i data-lucide="bar-chart-3"></i> Reports
+        </a>
+      </nav>
+
+      <!-- bottom block: admin / sign out / user -->
+      <div class="border-t border-slate-800 px-2 py-2 space-y-0.5 flex-shrink-0">
+        <a class="nav-item" data-route="admin" data-nav="admin">
+          <i data-lucide="shield"></i> Admin
+        </a>
+        <a class="nav-item" data-nav="login">
+          <i data-lucide="log-out"></i> Sign Out
+        </a>
+        <div class="flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-slate-800 pt-3">
+          <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-[11px] font-semibold text-white flex-shrink-0">RH</div>
+          <div class="min-w-0">
+            <div class="text-sm text-white font-medium truncate">Ron Hoagland</div>
+            <div class="text-[11px] text-slate-500 truncate">Administrator</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============ RIGHT AREA: TOPBAR + CONTENT ============ -->
+    <div class="flex flex-col flex-1 overflow-hidden">
+
+      <!-- B. TOPBAR -->
+      <header class="h-14 border-b border-slate-200 bg-white flex items-center px-5 flex-shrink-0 gap-4">
+        <div class="text-slate-900 font-semibold text-[15px]">Navy Island LLC</div>
+        <nav id="breadcrumb" class="text-sm text-slate-500 flex items-center gap-1.5"></nav>
+        <div class="flex-1"></div>
+        <div class="flex items-center gap-1">
+          <div class="relative mr-1">
+            <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input placeholder="Search..." class="w-64 h-9 rounded-md border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm focus:outline-none focus:border-blue-400 focus:bg-white" />
+          </div>
+          <button class="util-btn relative" title="Notifications">
+            <i data-lucide="bell"></i>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>
+          </button>
+          <button class="util-btn" title="Help"><i data-lucide="help-circle"></i></button>
+          <a href="#login" class="util-btn" title="Sign out"><i data-lucide="log-out"></i></a>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <main id="content" class="flex-1 overflow-y-auto"></main>
+    </div>
+  </div>
+
+  <!-- ============ DASHBOARD TEMPLATE ============ -->
+  <template id="tpl-dashboard">
+    <div class="px-8 py-7 max-w-[1400px]">
+      <!-- C. PAGE HEADER -->
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <p class="text-sm text-slate-500 mb-1">Friday, April 17</p>
+          <h1 class="text-[28px] font-semibold text-slate-900 tracking-tight">Good afternoon, Ron</h1>
+        </div>
+        <div class="flex gap-2">
+          <a href="#" class="btn-secondary"><i data-lucide="plus"></i> New Customer</a>
+          <a href="#quote-detail" class="btn-primary"><i data-lucide="plus"></i> New Quote</a>
+        </div>
+      </div>
+
+      <!-- Section heading -->
+      <h2 class="text-base font-semibold text-slate-900 mb-3">Workflow</h2>
+
+      <!-- D. STATS STRIP -->
+      <div class="grid grid-cols-4 gap-4 mb-8">
+        <div class="stat-card" style="--accent:#f97316">
+          <div class="flex items-center gap-2 text-slate-600 text-[13px] mb-2"><i data-lucide="inbox"></i> Requests</div>
+          <div class="text-3xl font-semibold text-slate-900">1</div>
+          <div class="text-sm text-slate-500 mt-1">New</div>
+          <div class="text-xs text-slate-400 mt-2">Assessments complete (0)<br/>Overdue (0)</div>
+        </div>
+        <div class="stat-card" style="--accent:#ef4444">
+          <div class="flex items-center gap-2 text-slate-600 text-[13px] mb-2"><i data-lucide="file-text"></i> Quotes</div>
+          <div class="text-3xl font-semibold text-slate-900">0</div>
+          <div class="text-sm text-slate-500 mt-1">Approved</div>
+          <div class="text-xs text-slate-400 mt-2">Draft (0)<br/>Changes requested (0)</div>
+        </div>
+        <div class="stat-card" style="--accent:#22c55e">
+          <div class="flex items-center gap-2 text-slate-600 text-[13px] mb-2"><i data-lucide="clipboard-list"></i> Work Orders</div>
+          <div class="text-3xl font-semibold text-slate-900">0</div>
+          <div class="text-sm text-slate-500 mt-1">Requires invoicing</div>
+          <div class="text-xs text-slate-400 mt-2">Active (0)<br/>Action required (0)</div>
+        </div>
+        <div class="stat-card" style="--accent:#eab308">
+          <div class="flex items-center gap-2 text-slate-600 text-[13px] mb-2"><i data-lucide="receipt"></i> Invoices</div>
+          <div class="text-3xl font-semibold text-slate-900">0</div>
+          <div class="text-sm text-slate-500 mt-1">Awaiting payment</div>
+          <div class="text-xs text-slate-400 mt-2">Draft (0)<br/>Past due (0)</div>
+        </div>
+      </div>
+
+      <!-- F. MAIN CANVAS: two column layout -->
+      <div class="grid grid-cols-3 gap-5">
+        <!-- Left: today's schedule (2 cols) -->
+        <div class="col-span-2 section-card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-semibold text-slate-900">Today's Schedule</h3>
+            <a href="#" class="text-sm text-blue-600 hover:underline">View schedule</a>
+          </div>
+          <div class="grid grid-cols-5 gap-3 mb-4 text-center">
+            <div><div class="text-xs text-slate-500 mb-1">Total</div><div class="text-xl font-semibold">$0</div></div>
+            <div><div class="text-xs text-slate-500 mb-1">Active</div><div class="text-xl font-semibold">$0</div></div>
+            <div><div class="text-xs text-slate-500 mb-1">Completed</div><div class="text-xl font-semibold">$0</div></div>
+            <div><div class="text-xs text-slate-500 mb-1">Overdue</div><div class="text-xl font-semibold">$0</div></div>
+            <div><div class="text-xs text-slate-500 mb-1">Remaining</div><div class="text-xl font-semibold">$0</div></div>
+          </div>
+          <div class="border border-dashed border-slate-200 rounded-lg py-12 text-center">
+            <div class="text-slate-500 text-sm mb-3">You have no visits scheduled today.</div>
+            <button class="btn-secondary"><i data-lucide="calendar-plus"></i> Schedule a Job</button>
+          </div>
+        </div>
+
+        <!-- Right: business performance (1 col) -->
+        <div class="col-span-1 section-card p-5 space-y-6">
+          <h3 class="text-base font-semibold text-slate-900">Business Performance</h3>
+
+          <a href="#" class="block -mx-2 px-2 py-2 rounded-md hover:bg-slate-50">
+            <div class="flex items-center justify-between">
+              <div class="font-medium text-slate-900">Receivables</div>
+              <i data-lucide="chevron-right" class="text-slate-400"></i>
+            </div>
+            <div class="text-xs text-slate-500 mt-1">0 clients owe you</div>
+            <div class="text-sm text-slate-400 mt-2">—</div>
+          </a>
+
+          <a href="#" class="block -mx-2 px-2 py-2 rounded-md hover:bg-slate-50">
+            <div class="flex items-center justify-between">
+              <div class="font-medium text-slate-900">Upcoming Jobs</div>
+              <i data-lucide="chevron-right" class="text-slate-400"></i>
+            </div>
+            <div class="text-xs text-slate-500 mt-1">This week (Apr 12 – Apr 18)</div>
+            <div class="text-sm text-slate-400 mt-2">—</div>
+          </a>
+
+          <a href="#" class="block -mx-2 px-2 py-2 rounded-md hover:bg-slate-50">
+            <div class="flex items-center justify-between">
+              <div class="font-medium text-slate-900">Revenue</div>
+              <i data-lucide="chevron-right" class="text-slate-400"></i>
+            </div>
+            <div class="text-xs text-slate-500 mt-1">This month (Apr 1 – now)</div>
+            <div class="text-lg font-semibold text-slate-900 mt-2">$0</div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- ============ CUSTOMERS LIST TEMPLATE ============ -->
+  <template id="tpl-customers">
+    <div class="px-8 py-7 max-w-[1400px]">
+      <!-- C. PAGE HEADER -->
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h1 class="text-[28px] font-semibold text-slate-900 tracking-tight">Customers</h1>
+          <p class="text-sm text-slate-500 mt-1">3 records</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-secondary"><i data-lucide="upload"></i> Import</button>
+          <button class="btn-secondary"><i data-lucide="download"></i> Export</button>
+          <a class="btn-primary" data-nav="customer-new"><i data-lucide="plus"></i> New Customer</a>
+        </div>
+      </div>
+
+      <!-- D. STATS STRIP -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="stat-card" style="--accent:#3b82f6">
+          <div class="text-[13px] text-slate-600 font-medium">New leads</div>
+          <div class="text-xs text-slate-400 mb-2">Past 30 days</div>
+          <div class="flex items-baseline gap-2">
+            <div class="text-3xl font-semibold text-slate-900">1</div>
+            <div class="text-xs text-green-600 font-medium">↑ 100%</div>
+          </div>
+        </div>
+        <div class="stat-card" style="--accent:#3b82f6">
+          <div class="text-[13px] text-slate-600 font-medium">New customers</div>
+          <div class="text-xs text-slate-400 mb-2">Past 30 days</div>
+          <div class="flex items-baseline gap-2">
+            <div class="text-3xl font-semibold text-slate-900">2</div>
+            <div class="text-xs text-slate-500 font-medium">0%</div>
+          </div>
+        </div>
+        <div class="stat-card" style="--accent:#3b82f6">
+          <div class="text-[13px] text-slate-600 font-medium">Total customers</div>
+          <div class="text-xs text-slate-400 mb-2">Year to date</div>
+          <div class="text-3xl font-semibold text-slate-900">3</div>
+        </div>
+      </div>
+
+      <!-- E. TOOLBAR -->
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex gap-2">
+          <button class="chip"><i data-lucide="filter"></i> Filter <span class="text-slate-400">·</span> <span class="text-slate-900 font-medium">Status: All</span></button>
+          <button class="chip"><i data-lucide="tag"></i> Tags</button>
+          <button class="chip"><i data-lucide="columns"></i> Columns</button>
+        </div>
+        <div class="relative">
+          <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input placeholder="Search customers..." class="w-72 h-9 rounded-md border border-slate-200 bg-white pl-9 pr-3 text-sm focus:outline-none focus:border-blue-400" />
+        </div>
+      </div>
+
+      <!-- F. MAIN CANVAS: table -->
+      <div class="section-card overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600">
+            <tr>
+              <th class="text-left px-4 py-3 w-10"><input type="checkbox" class="rounded" /></th>
+              <th class="text-left px-4 py-3 font-medium">Name</th>
+              <th class="text-left px-4 py-3 font-medium">Company</th>
+              <th class="text-left px-4 py-3 font-medium">Address</th>
+              <th class="text-left px-4 py-3 font-medium">Phone</th>
+              <th class="text-left px-4 py-3 font-medium">Email</th>
+              <th class="text-left px-4 py-3 font-medium">Status</th>
+              <th class="text-left px-4 py-3 font-medium">Last Activity</th>
+              <th class="w-10"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr class="table-row">
+              <td class="px-4 py-3"><input type="checkbox" class="rounded" /></td>
+              <td class="px-4 py-3 font-medium text-slate-900">Ron Hoagland</td>
+              <td class="px-4 py-3 text-slate-600">Navy Island LLC</td>
+              <td class="px-4 py-3 text-slate-600">2426 E Riverside Dr, Austin, TX 78741</td>
+              <td class="px-4 py-3 text-slate-600">(206) 555-0122</td>
+              <td class="px-4 py-3 text-slate-600">ron@navyisland.com</td>
+              <td class="px-4 py-3"><span class="badge" style="background:#dbeafe;color:#1e40af">● Active</span></td>
+              <td class="px-4 py-3 text-slate-500">9:24 AM</td>
+              <td class="px-2"><button class="util-btn" title="More"><i data-lucide="more-horizontal"></i></button></td>
+            </tr>
+            <tr class="table-row">
+              <td class="px-4 py-3"><input type="checkbox" class="rounded" /></td>
+              <td class="px-4 py-3 font-medium text-slate-900">Tim Combely</td>
+              <td class="px-4 py-3 text-slate-600">—</td>
+              <td class="px-4 py-3 text-slate-600">2254 W Main St, Rock Hill, SC 29732</td>
+              <td class="px-4 py-3 text-slate-600">(615) 325-4459</td>
+              <td class="px-4 py-3 text-slate-600">—</td>
+              <td class="px-4 py-3"><span class="badge" style="background:#fef3c7;color:#92400e">● Lead</span></td>
+              <td class="px-4 py-3 text-slate-500">Yesterday</td>
+              <td class="px-2"><button class="util-btn" title="More"><i data-lucide="more-horizontal"></i></button></td>
+            </tr>
+            <tr class="table-row">
+              <td class="px-4 py-3"><input type="checkbox" class="rounded" /></td>
+              <td class="px-4 py-3 font-medium text-slate-900">Jane Simpson</td>
+              <td class="px-4 py-3 text-slate-600">ABC Company</td>
+              <td class="px-4 py-3 text-slate-600">701 S Harrison Ave, Kankakee, IL 60901</td>
+              <td class="px-4 py-3 text-slate-600">(314) 604-6449</td>
+              <td class="px-4 py-3 text-slate-600">jane@abccompany.com</td>
+              <td class="px-4 py-3"><span class="badge" style="background:#dbeafe;color:#1e40af">● Active</span></td>
+              <td class="px-4 py-3 text-slate-500">Apr 14</td>
+              <td class="px-2"><button class="util-btn" title="More"><i data-lucide="more-horizontal"></i></button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="flex items-center justify-between px-4 py-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500">
+          <div>Rows per page: 25 ▾</div>
+          <div>1–3 of 3 <button class="ml-3 util-btn"><i data-lucide="chevron-left"></i></button><button class="util-btn"><i data-lucide="chevron-right"></i></button></div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- ============ NEW CUSTOMER FORM TEMPLATE (full-page form pattern) ============ -->
+  <template id="tpl-customer-new">
+    <div class="px-8 py-7 max-w-4xl">
+      <!-- Header -->
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <a class="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1 mb-2" data-nav="customers"><i data-lucide="arrow-left"></i> Customers</a>
+          <h1 class="text-[26px] font-semibold text-slate-900 tracking-tight">New Customer</h1>
+          <p class="text-sm text-slate-500 mt-1">Fields marked <span class="text-red-500">*</span> are required.</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-secondary" data-nav="customers">Cancel</button>
+          <button class="btn-primary"><i data-lucide="check"></i> Save Customer</button>
+        </div>
+      </div>
+
+      <!-- Sections -->
+      <div class="space-y-5">
+
+        <!-- Contact info -->
+        <div class="section-card p-6">
+          <h3 class="text-base font-semibold text-slate-900 mb-1">Contact Information</h3>
+          <p class="text-xs text-slate-500 mb-5">Primary contact for this customer record.</p>
+          <div class="grid grid-cols-2 gap-4">
+            <div><label class="field-label field-label-req">First Name</label><input class="input-sm" placeholder="e.g. Ron" /></div>
+            <div><label class="field-label field-label-req">Last Name</label><input class="input-sm" placeholder="e.g. Hoagland" /></div>
+            <div><label class="field-label">Company</label><input class="input-sm" placeholder="Optional" /></div>
+            <div><label class="field-label">Title</label><input class="input-sm" placeholder="e.g. Owner" /></div>
+            <div><label class="field-label field-label-req">Email</label><input class="input-sm" type="email" placeholder="name@example.com" /></div>
+            <div><label class="field-label">Phone</label><input class="input-sm" type="tel" placeholder="(555) 555-0122" /></div>
+          </div>
+        </div>
+
+        <!-- Primary property -->
+        <div class="section-card p-6">
+          <h3 class="text-base font-semibold text-slate-900 mb-1">Primary Property Address</h3>
+          <p class="text-xs text-slate-500 mb-5">Where services will typically be performed. Additional properties can be added after creation.</p>
+          <div class="grid grid-cols-6 gap-4">
+            <div class="col-span-6"><label class="field-label">Street Address</label><input class="input-sm" placeholder="123 Main St" /></div>
+            <div class="col-span-3"><label class="field-label">City</label><input class="input-sm" /></div>
+            <div class="col-span-2"><label class="field-label">State</label>
+              <select class="select-sm"><option>TX</option><option>CA</option><option>NY</option></select>
+            </div>
+            <div class="col-span-1"><label class="field-label">ZIP</label><input class="input-sm" /></div>
+          </div>
+          <label class="flex items-center gap-2 text-sm text-slate-600 mt-4"><input type="checkbox" class="rounded" checked /> Billing address same as property address</label>
+        </div>
+
+        <!-- Preferences -->
+        <div class="section-card p-6">
+          <h3 class="text-base font-semibold text-slate-900 mb-1">Preferences</h3>
+          <p class="text-xs text-slate-500 mb-5">Used to set sensible defaults on new quotes and invoices.</p>
+          <div class="grid grid-cols-2 gap-4">
+            <div><label class="field-label">Payment Terms</label>
+              <select class="select-sm"><option>Residential default (Net 30)</option><option>Due on receipt</option><option>Net 15</option><option>Net 60</option></select>
+            </div>
+            <div><label class="field-label">Lead Source</label>
+              <select class="select-sm"><option>—</option><option>Referral</option><option>Website</option><option>Google</option><option>Repeat</option></select>
+            </div>
+            <div class="col-span-2"><label class="field-label">Tags</label><input class="input-sm" placeholder="VIP, priority, commercial..." /></div>
+            <div class="col-span-2"><label class="field-label">Internal Notes</label><textarea class="textarea-sm" placeholder="Private — not visible to customer"></textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sticky action bar at bottom -->
+      <div class="flex justify-end gap-2 mt-6 py-4 border-t border-slate-200">
+        <button class="btn-secondary" data-nav="customers">Cancel</button>
+        <button class="btn-primary"><i data-lucide="check"></i> Save Customer</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- ============ INVOICE DETAIL TEMPLATE ============ -->
+  <template id="tpl-invoice-detail">
+    <div class="px-8 py-7 max-w-[1400px]">
+      <!-- C. PAGE HEADER -->
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <a href="#invoices" class="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1"><i data-lucide="arrow-left"></i> Invoices</a>
+          </div>
+          <div class="flex items-center gap-3">
+            <h1 class="text-[26px] font-semibold text-slate-900 tracking-tight">Invoice #INV-2026-0001</h1>
+            <span class="badge" style="background:#e2e8f0;color:#475569">● Draft</span>
+          </div>
+          <p class="text-sm text-slate-500 mt-1">Exterior Window Cleaning · For Ron Hoagland</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-secondary"><i data-lucide="more-horizontal"></i> More</button>
+          <button class="btn-secondary"><i data-lucide="printer"></i> Print</button>
+          <button class="btn-primary"><i data-lucide="send"></i> Send Invoice</button>
+        </div>
+      </div>
+
+      <!-- F + G. MAIN CANVAS (2/3) + CONTEXT PANEL (1/3) -->
+      <div class="grid grid-cols-3 gap-5">
+
+        <!-- F. MAIN CANVAS -->
+        <div class="col-span-2 space-y-5">
+
+          <!-- Metadata card (INLINE EDIT pattern) -->
+          <div class="section-card editable p-6" data-editable>
+            <button class="section-pencil" data-edit-toggle title="Edit"><i data-lucide="pencil"></i></button>
+
+            <!-- VIEW MODE -->
+            <div class="view-mode">
+              <div class="grid grid-cols-2 gap-6">
+                <div>
+                  <div class="field-label">Bill To</div>
+                  <div class="field-value font-medium">Ron Hoagland</div>
+                  <div class="text-sm text-slate-600 mt-1">Navy Island LLC<br/>2426 E Riverside Dr<br/>Austin, TX 78741</div>
+                  <div class="text-sm text-slate-600 mt-2">(206) 555-0122<br/>ron@navyisland.com</div>
+                </div>
+                <div class="space-y-4">
+                  <div><span class="field-label">Invoice #</span><span class="field-value">INV-2026-0001</span></div>
+                  <div><span class="field-label">Issued</span><span class="field-value">Apr 17, 2026</span></div>
+                  <div><span class="field-label">Due</span><span class="field-value">May 17, 2026 <span class="text-slate-400">(Net 30)</span></span></div>
+                  <div><span class="field-label">Work Order</span><a href="#" class="field-value text-blue-600 hover:underline">WO-2026-0003</a></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- EDIT MODE -->
+            <div class="edit-mode">
+              <div class="grid grid-cols-2 gap-5">
+                <div>
+                  <label class="field-label field-label-req">Customer</label>
+                  <select class="select-sm"><option>Ron Hoagland — Navy Island LLC</option><option>Tim Combely</option><option>Jane Simpson — ABC Company</option></select>
+                  <p class="text-xs text-slate-400 mt-2">Billing address uses the customer's primary property by default.</p>
+                </div>
+                <div class="space-y-3">
+                  <div><label class="field-label">Invoice #</label><input class="input-sm" value="INV-2026-0001" readonly /></div>
+                  <div><label class="field-label field-label-req">Issued Date</label><input class="input-sm" type="date" value="2026-04-17" /></div>
+                  <div><label class="field-label field-label-req">Payment Terms</label>
+                    <select class="select-sm"><option>Net 30</option><option>Net 15</option><option>Net 60</option><option>Due on receipt</option></select>
+                  </div>
+                  <div><label class="field-label">Linked Work Order</label><input class="input-sm" value="WO-2026-0003" /></div>
+                </div>
+              </div>
+              <div class="edit-footer">
+                <span class="dirty-hint" data-dirty-hint style="display:none"><i data-lucide="circle-dot"></i> Unsaved changes</span>
+                <button class="btn-secondary" data-edit-cancel>Cancel</button>
+                <button class="btn-primary" data-edit-save><i data-lucide="check"></i> Save</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Line items card (DRAWER EDIT pattern) -->
+          <div class="section-card p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-base font-semibold text-slate-900">Line Items</h3>
+              <button class="text-sm text-blue-600 hover:underline flex items-center gap-1" data-action="edit-line-items"><i data-lucide="edit-3"></i> Edit line items</button>
+            </div>
+            <table class="w-full text-sm">
+              <thead class="border-b border-slate-200 text-slate-600">
+                <tr>
+                  <th class="text-left pb-2 font-medium">Description</th>
+                  <th class="text-right pb-2 font-medium w-20">Qty</th>
+                  <th class="text-right pb-2 font-medium w-28">Unit Price</th>
+                  <th class="text-right pb-2 font-medium w-28">Total</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr>
+                  <td class="py-3">
+                    <div class="font-medium text-slate-900">Exterior Window Cleaning</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Price is per window. Includes de-ionized rinse and frame wipe-down.</div>
+                  </td>
+                  <td class="py-3 text-right">12</td>
+                  <td class="py-3 text-right">$45.00</td>
+                  <td class="py-3 text-right">$540.00</td>
+                </tr>
+                <tr>
+                  <td class="py-3">
+                    <div class="font-medium text-slate-900">Permits &amp; Fees</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Permit application and inspection coordination.</div>
+                  </td>
+                  <td class="py-3 text-right">1</td>
+                  <td class="py-3 text-right">$150.00</td>
+                  <td class="py-3 text-right">$150.00</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="mt-4 pt-4 border-t border-slate-200 flex justify-end">
+              <div class="w-64 space-y-2 text-sm">
+                <div class="flex justify-between text-slate-600"><span>Subtotal</span><span>$690.00</span></div>
+                <div class="flex justify-between text-slate-600"><span>Tax (8.25%)</span><span>$56.93</span></div>
+                <div class="flex justify-between font-semibold text-slate-900 text-base pt-2 border-t border-slate-200"><span>Total</span><span>$746.93</span></div>
+                <div class="flex justify-between text-slate-600 pt-2"><span>Amount Paid</span><span>$0.00</span></div>
+                <div class="flex justify-between font-semibold text-slate-900"><span>Balance Due</span><span>$746.93</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment card -->
+          <div class="section-card p-6">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-base font-semibold text-slate-900">Payment</h3>
+              <span class="badge" style="background:#fef3c7;color:#92400e">Awaiting payment</span>
+            </div>
+            <div class="flex gap-2">
+              <button class="btn-secondary"><i data-lucide="link"></i> Copy Payment Link</button>
+              <button class="btn-secondary"><i data-lucide="plus"></i> Record Manual Payment</button>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">Customer will be redirected to Stripe Checkout to complete payment.</p>
+          </div>
+
+          <!-- Terms & Notes (INLINE EDIT pattern — small section) -->
+          <div class="section-card editable p-6" data-editable>
+            <button class="section-pencil" data-edit-toggle title="Edit"><i data-lucide="pencil"></i></button>
+
+            <div class="view-mode">
+              <h3 class="text-base font-semibold text-slate-900 mb-2">Terms &amp; Notes</h3>
+              <p class="text-sm text-slate-600">Thank you for your business. Please contact us with any questions regarding this invoice.</p>
+            </div>
+
+            <div class="edit-mode">
+              <h3 class="text-base font-semibold text-slate-900 mb-3">Terms &amp; Notes</h3>
+              <label class="field-label">Customer-facing message</label>
+              <textarea class="textarea-sm">Thank you for your business. Please contact us with any questions regarding this invoice.</textarea>
+              <div class="edit-footer">
+                <button class="btn-secondary" data-edit-cancel>Cancel</button>
+                <button class="btn-primary" data-edit-save><i data-lucide="check"></i> Save</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- G. CONTEXT PANEL -->
+        <aside class="col-span-1 space-y-5">
+
+          <div class="section-card p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-slate-900">Client View</h3>
+              <button class="util-btn"><i data-lucide="edit-3"></i></button>
+            </div>
+            <div class="space-y-2.5 text-sm">
+              <div class="flex items-center justify-between"><span class="text-slate-600">Quantities</span><div class="toggle"></div></div>
+              <div class="flex items-center justify-between"><span class="text-slate-600">Unit prices</span><div class="toggle"></div></div>
+              <div class="flex items-center justify-between"><span class="text-slate-600">Line item totals</span><div class="toggle"></div></div>
+              <div class="flex items-center justify-between"><span class="text-slate-600">Account balance</span><div class="toggle"></div></div>
+              <div class="flex items-center justify-between"><span class="text-slate-600">Late stamp (if overdue)</span><div class="toggle off"></div></div>
+            </div>
+          </div>
+
+          <div class="section-card p-5">
+            <h3 class="text-sm font-semibold text-slate-900 mb-3">Internal Notes</h3>
+            <div class="border border-dashed border-slate-200 rounded-lg py-8 text-center">
+              <i data-lucide="sticky-note" class="mx-auto text-slate-400 mb-2" style="width:24px;height:24px"></i>
+              <p class="text-xs text-slate-500 px-4">Leave an internal note for yourself or a team member</p>
+              <button class="btn-secondary mt-3 text-xs"><i data-lucide="plus"></i> Add Note</button>
+            </div>
+          </div>
+
+          <div class="section-card p-5">
+            <h3 class="text-sm font-semibold text-slate-900 mb-3">Activity</h3>
+            <ul class="space-y-3 text-sm">
+              <li class="flex gap-3">
+                <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0"><i data-lucide="file-plus" style="width:14px;height:14px"></i></div>
+                <div>
+                  <div class="text-slate-900">Invoice created</div>
+                  <div class="text-xs text-slate-500">Ron H. · Today at 9:24 AM</div>
+                </div>
+              </li>
+              <li class="flex gap-3">
+                <div class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0"><i data-lucide="link" style="width:14px;height:14px"></i></div>
+                <div>
+                  <div class="text-slate-900">Linked to WO-2026-0003</div>
+                  <div class="text-xs text-slate-500">Ron H. · Today at 9:23 AM</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </template>
+
+  <!-- Fallback for routes we haven't built yet -->
+  <template id="tpl-placeholder">
+    <div class="px-8 py-7">
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h1 class="text-[28px] font-semibold text-slate-900 tracking-tight" id="ph-title">Module</h1>
+          <p class="text-sm text-slate-500 mt-1">This screen hasn't been prototyped yet.</p>
+        </div>
+      </div>
+      <div class="section-card p-12 text-center">
+        <i data-lucide="construction" class="mx-auto text-slate-400 mb-3" style="width:40px;height:40px"></i>
+        <p class="text-slate-600">This page uses the same shell. Only the content slot (<code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded">F. Main Canvas</code>) changes.</p>
+        <div class="mt-5 flex gap-2 justify-center">
+          <a href="#dashboard" class="btn-secondary">Dashboard</a>
+          <a href="#customers" class="btn-secondary">Customers</a>
+          <a href="#invoice-detail" class="btn-primary">Invoice Detail</a>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // Route definitions. tpl = template id, crumbs = breadcrumb trail, title = page title for placeholder pages, group = parent accordion group (to auto-expand)
+    const routes = {
+      'dashboard':      { tpl: 'tpl-dashboard',      crumbs: ['Home'] },
+      'customers':      { tpl: 'tpl-customers',      crumbs: ['Home', 'Customers', 'Contacts'], group: 'customers' },
+      'customer-new':   { tpl: 'tpl-customer-new',   crumbs: ['Home', 'Customers', 'Contacts', 'New'], group: 'customers' },
+      'invoice-detail': { tpl: 'tpl-invoice-detail', crumbs: ['Home', 'Sales', 'Invoices', 'INV-2026-0001'], group: 'sales' },
+      'reports':        { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Reports'],     title: 'Reports' },
+      'admin':          { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Admin'],       title: 'Admin' },
+
+      // Customers group
+      'assets':         { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Customers', 'Assets'],              title: 'Assets',               group: 'customers' },
+      'preventative':   { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Customers', 'Preventative Maint.'], title: 'Preventative Maintenance', group: 'customers' },
+
+      // Work group
+      'schedules':      { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Work', 'Schedules'],    title: 'Schedules',   group: 'work' },
+      'requests':       { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Work', 'Requests'],     title: 'Requests',    group: 'work' },
+      'work-orders':    { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Work', 'Work Orders'],  title: 'Work Orders', group: 'work' },
+      'work-groups':    { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Work', 'Work Groups'],  title: 'Work Groups', group: 'work' },
+
+      // Sales group
+      'leads':          { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Sales', 'Leads'],         title: 'Leads',         group: 'sales' },
+      'opportunities':  { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Sales', 'Opportunities'], title: 'Opportunities', group: 'sales' },
+      'quotes':         { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Sales', 'Quotes'],        title: 'Quotes',        group: 'sales' },
+      'invoices':       { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Sales', 'Invoices'],      title: 'Invoices',      group: 'sales' },
+      'payments':       { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Sales', 'Payments'],      title: 'Payments',      group: 'sales' },
+
+      // Inventory group
+      'parts':          { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Inventory', 'Parts'],         title: 'Parts',         group: 'inventory' },
+      'services':       { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Inventory', 'Services'],      title: 'Services',      group: 'inventory' },
+      'purchasing':     { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Inventory', 'Purchasing'],    title: 'Purchasing',    group: 'inventory' },
+      'receiving':      { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Inventory', 'Receiving'],     title: 'Receiving',     group: 'inventory' },
+      'checkinout':     { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Inventory', 'Check In/Out'],  title: 'Check In / Check Out', group: 'inventory' },
+      'vendors':        { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Inventory', 'Vendors'],       title: 'Vendors',       group: 'inventory' },
+
+      // Operations group
+      'employees':      { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Operations', 'Employees'],     title: 'Employees',     group: 'operations' },
+      'fleet':          { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Operations', 'Fleet'],         title: 'Fleet',         group: 'operations' },
+      'warehouses':     { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Operations', 'Warehouses'],    title: 'Warehouses',    group: 'operations' },
+      'agreements':     { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Operations', 'Agreements'],    title: 'Agreements',    group: 'operations' },
+      'workflows':      { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Operations', 'Workflows'],     title: 'Workflows',     group: 'operations' },
+      'safety':         { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Operations', 'Safety Forms'],  title: 'Safety Forms',  group: 'operations' },
+      'billing':        { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Operations', 'Billing'],       title: 'Billing',       group: 'operations' },
+      'rma':            { tpl: 'tpl-placeholder',    crumbs: ['Home', 'Operations', 'RMA'],           title: 'RMA',           group: 'operations' },
+    };
+
+    // what appears selected in the sidebar for a given route (e.g., invoice-detail highlights 'invoices')
+    const sidebarForRoute = {
+      'invoice-detail': 'invoices',
+      'customer-new':   'customers',
+    };
+
+    let currentView = 'login';
+
+    function renderLogin() {
+      document.body.dataset.view = 'login';
+      const d = new Date();
+      const fmt = d.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      const el = document.getElementById('login-date');
+      if (el) el.textContent = fmt;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function render(view) {
+      currentView = view || currentView;
+
+      if (currentView === 'login') {
+        renderLogin();
+        return;
+      }
+      document.body.dataset.view = 'app';
+
+      const route = routes[currentView] || routes['dashboard'];
+
+      // content
+      const tpl = document.getElementById(route.tpl);
+      const content = document.getElementById('content');
+      content.innerHTML = tpl.innerHTML;
+      if (route.tpl === 'tpl-placeholder' && route.title) {
+        const t = content.querySelector('#ph-title');
+        if (t) t.textContent = route.title;
+      }
+
+      // breadcrumb
+      const crumbEl = document.getElementById('breadcrumb');
+      crumbEl.innerHTML = route.crumbs.map((c, i) => {
+        const last = i === route.crumbs.length - 1;
+        return `<span class="${last ? 'text-slate-900 font-medium' : ''}">${c}</span>` +
+               (last ? '' : `<i data-lucide="chevron-right" style="width:14px;height:14px"></i>`);
+      }).join('');
+
+      // active sidebar item
+      const activeNav = sidebarForRoute[currentView] || currentView;
+      document.querySelectorAll('[data-route]').forEach(el => {
+        el.classList.toggle('active', el.dataset.route === activeNav);
+      });
+
+      // auto-expand the group containing the active route
+      if (route.group) {
+        const items = document.querySelector(`[data-group-items="${route.group}"]`);
+        const btn = document.querySelector(`.nav-group[data-group="${route.group}"]`);
+        if (items && btn) {
+          items.classList.add('open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+      }
+
+      // scroll content to top
+      content.scrollTop = 0;
+
+      // re-create icons
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function goTo(view) {
+      render(view);
+      try { if (location.hash !== '#' + view) location.hash = view; } catch (e) { /* ignore */ }
+    }
+
+    // Drawer helpers
+    function openDrawer(title, subtitle, bodyHTML) {
+      document.getElementById('drawer-title').textContent = title;
+      document.getElementById('drawer-subtitle').textContent = subtitle || '';
+      document.getElementById('drawer-body').innerHTML = bodyHTML;
+      const d = document.getElementById('drawer');
+      d.classList.add('open');
+      d.setAttribute('aria-hidden', 'false');
+      if (window.lucide) lucide.createIcons();
+    }
+    function closeDrawer() {
+      const d = document.getElementById('drawer');
+      d.classList.remove('open');
+      d.setAttribute('aria-hidden', 'true');
+    }
+
+    function openLineItemsDrawer() {
+      const items = [
+        { desc: 'Exterior Window Cleaning', note: 'Price is per window. Includes de-ionized rinse and frame wipe-down.', qty: 12, price: 45.00 },
+        { desc: 'Permits & Fees',           note: 'Permit application and inspection coordination.',                    qty: 1,  price: 150.00 },
+      ];
+      const rows = items.map((it, i) => `
+        <div class="li-row">
+          <div class="li-row-header">
+            <span class="text-xs text-slate-500 font-medium">Item ${i+1}</span>
+            <button class="util-btn" title="Remove"><i data-lucide="trash-2"></i></button>
+          </div>
+          <div class="mb-2"><label class="field-label field-label-req">Description</label><input class="input-sm" value="${it.desc}" /></div>
+          <div class="mb-2"><label class="field-label">Notes (shown to customer)</label><textarea class="textarea-sm" style="min-height:50px">${it.note}</textarea></div>
+          <div class="li-grid">
+            <div><label class="field-label">Product/Service</label><select class="select-sm"><option>— Select —</option><option selected>Custom</option></select></div>
+            <div><label class="field-label">Qty</label><input class="input-sm" type="number" value="${it.qty}" /></div>
+            <div><label class="field-label">Unit Price</label><input class="input-sm" value="$${it.price.toFixed(2)}" /></div>
+            <div><label class="field-label">Line Total</label><input class="input-sm" value="$${(it.qty*it.price).toFixed(2)}" readonly style="background:#f8fafc" /></div>
+          </div>
+        </div>`).join('');
+      const body = `
+        ${rows}
+        <button class="btn-secondary w-full mt-2"><i data-lucide="plus"></i> Add Line Item</button>
+        <div class="mt-5 p-4 bg-white rounded-lg border border-slate-200">
+          <div class="flex items-center justify-between text-sm text-slate-600 mb-1"><span>Subtotal</span><span>$690.00</span></div>
+          <div class="flex items-center justify-between text-sm text-slate-600 mb-1"><span>Tax (8.25%)</span><span>$56.93</span></div>
+          <div class="flex items-center justify-between font-semibold text-slate-900 text-base pt-2 border-t border-slate-200 mt-2"><span>Total</span><span>$746.93</span></div>
+        </div>`;
+      openDrawer('Edit Line Items', 'Invoice INV-2026-0001', body);
+    }
+
+    function initApp() {
+      // Login form → dashboard
+      const form = document.getElementById('login-form');
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          goTo('dashboard');
+        });
+      }
+
+      // Accordion group toggles
+      document.querySelectorAll('.nav-group').forEach(btn => {
+        btn.setAttribute('aria-expanded', 'false');
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const g = btn.dataset.group;
+          const items = document.querySelector(`[data-group-items="${g}"]`);
+          const open = items.classList.toggle('open');
+          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+      });
+
+      // Any element with data-nav → route to that view
+      document.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-nav]');
+        if (!el) return;
+        e.preventDefault();
+        goTo(el.dataset.nav);
+      });
+
+      // Inline-edit toggles (pencil / save / cancel on .section-card.editable)
+      document.addEventListener('click', (e) => {
+        const pencil = e.target.closest('[data-edit-toggle]');
+        if (pencil) {
+          const card = pencil.closest('.section-card');
+          // Close any other card that's being edited
+          document.querySelectorAll('.section-card.editing').forEach(c => { if (c !== card) c.classList.remove('editing'); });
+          card.classList.add('editing');
+          // focus first input
+          const firstInput = card.querySelector('.edit-mode input, .edit-mode select, .edit-mode textarea');
+          if (firstInput && !firstInput.readOnly) firstInput.focus();
+          return;
+        }
+        const cancel = e.target.closest('[data-edit-cancel]');
+        if (cancel) {
+          cancel.closest('.section-card').classList.remove('editing');
+          return;
+        }
+        const save = e.target.closest('[data-edit-save]');
+        if (save) {
+          // Prototype: just close. In a real app, POST then close on success.
+          save.closest('.section-card').classList.remove('editing');
+          return;
+        }
+      });
+
+      // Dirty-state indicator — any edit-mode input change shows "Unsaved changes"
+      document.addEventListener('input', (e) => {
+        const editMode = e.target.closest('.section-card.editing .edit-mode');
+        if (!editMode) return;
+        const hint = editMode.querySelector('[data-dirty-hint]');
+        if (hint) hint.style.display = 'flex';
+      });
+
+      // Drawer open / close
+      document.addEventListener('click', (e) => {
+        const action = e.target.closest('[data-action]');
+        if (action && action.dataset.action === 'edit-line-items') {
+          openLineItemsDrawer();
+          return;
+        }
+        if (e.target.closest('[data-drawer-close]') || e.target.matches('.drawer-backdrop')) {
+          closeDrawer();
+          return;
+        }
+        if (e.target.closest('[data-drawer-save]')) {
+          // Prototype: just close.
+          closeDrawer();
+          return;
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeDrawer();
+      });
+
+      // Initial view from hash if present
+      const hashView = location.hash.slice(1);
+      if (hashView && (routes[hashView] || hashView === 'login')) {
+        currentView = hashView;
+      }
+      render();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      initApp();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+{% extends "core/details_base.html" %}
+
+{% block title %}Delete {{ product.name }}{% endblock %}
+
+{% block back_url %}{% url 'product_detail' pk=product.pk %}{% endblock %}
+
+{% block sidebar_actions %}
+<form method="post" style="width: 100%;">
+    {% csrf_token %}
+    <button type="submit" class="btn-sidebar-delete">
+        Confirm Delete
+    </button>
+</form>
+<a href="{% url 'product_detail' pk=product.pk %}" class="btn-sidebar-cancel">
+    Cancel
+</a>
+
+<style>
+    .btn-sidebar-delete {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: 0.375rem;
+        color: white;
+        background-color: #dc2626;
+        border: none;
+        cursor: pointer;
+        margin-bottom: 0.5rem;
+        transition: background-color 0.2s;
+    }
+    .btn-sidebar-delete:hover {
+        background-color: #b91c1c;
+    }
+    .btn-sidebar-cancel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: 0.375rem;
+        color: #374151;
+        background-color: white;
+        border: 1px solid #d1d5db;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+    .btn-sidebar-cancel:hover {
+        background-color: #f9fafb;
+    }
+    .confirmation-card {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        padding: 2rem;
+        text-align: center;
+    }
+    .warning-box {
+        background-color: #fef2f2;
+        border-left: 4px solid #f87171;
+        padding: 1rem;
+        display: flex;
+        align-items: flex-start;
+    }
+</style>
+{% endblock %}
+
+{% block left_column %}
+<div class="confirmation-card">
+    <div style="margin-bottom: 1rem;">
+        <svg style="margin: 0 auto; height: 3rem; width: 3rem; color: #ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <h3 style="margin-top: 0.5rem; font-size: 1.125rem; font-weight: 500; color: #111827;">Delete Product?</h3>
+        <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+            Are you sure you want to delete <strong>{{ product.name }}</strong> ({{ product.sku }})?
+            This action cannot be undone.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block right_column %}
+<div class="warning-box">
+    <div style="margin-left: 0.75rem;">
+         <p style="font-size: 0.875rem; color: #b91c1c; margin: 0;">
+            Warning: Deleting this product will cascade delete all linked Notes and Documents.
+        </p>
+    </div>
+</div>
+{% endblock %}

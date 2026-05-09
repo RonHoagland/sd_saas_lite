@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% comment %}
+  Admin scaffolding — Roles list + add form.
+  Phase 8 may consolidate this under Company Settings.
+{% endcomment %}
+
+{% block title %}Roles · ServizDesk Lite{% endblock %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'tenant-preferences' %}">Settings</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">Roles</span>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4" style="max-width:1200px;">
+
+  <div class="d-flex align-items-center gap-2 mb-4">
+    <a href="{% url 'tenant-preferences' %}" class="sd-util-btn" title="Back" aria-label="Back">
+      <i data-lucide="arrow-left"></i>
+    </a>
+    <h1 class="h4 fw-semibold text-body-emphasis mb-0">Roles</h1>
+  </div>
+
+  {% for msg in messages %}
+    <div class="alert {% if msg.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} py-2 px-3 small" role="alert">{{ msg }}</div>
+  {% endfor %}
+
+  <div class="row g-3">
+
+    {# List #}
+    <div class="col-12 col-lg-8">
+      <div class="sd-section-card overflow-hidden">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+              <tr>
+                <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Role Name</th>
+                <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for role in roles %}
+              <tr>
+                <td class="text-body-emphasis">{{ role.name }}</td>
+                <td>
+                  {% if role.is_custom %}
+                    <span class="badge bg-primary-subtle text-primary-emphasis">Custom</span>
+                  {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis">System</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="2" class="text-center text-body-secondary py-5">No roles yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {# Add form #}
+    <div class="col-12 col-lg-4">
+      <div class="sd-section-card p-4">
+        <h2 class="h6 fw-semibold text-body-secondary mb-3">Add Role</h2>
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label small fw-medium text-body-secondary" for="role_name">Role Name</label>
+            <input id="role_name" name="name" class="form-control" type="text" placeholder="e.g. Technician" autofocus />
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm w-100">Add Role</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

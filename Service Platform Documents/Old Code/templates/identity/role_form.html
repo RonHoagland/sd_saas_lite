@@ -1,0 +1,35 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}Create Role - BrixaWares{% endblock %}
+{% block page_title %}Create New Role{% endblock %}
+
+{% block main_content %}
+<div class="card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border); max-width: 600px;">
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: var(--bx-spacing-md);">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Role Name</label>
+            <input type="text" name="name" required style="width: 100%; padding: 8px; border: 1px solid var(--bx-color-border); border-radius: 4px;">
+        </div>
+
+        <div style="margin-bottom: var(--bx-spacing-md);">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Role Key</label>
+            <input type="text" name="key" required style="width: 100%; padding: 8px; border: 1px solid var(--bx-color-border); border-radius: 4px;" placeholder="e.g. manager_level_2">
+            <small style="color: var(--bx-color-text-muted);">Unique system identifier. Cannot be changed later.</small>
+        </div>
+
+        <div style="margin-bottom: var(--bx-spacing-lg);">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Description</label>
+            <textarea name="description" rows="3" style="width: 100%; padding: 8px; border: 1px solid var(--bx-color-border); border-radius: 4px;"></textarea>
+        </div>
+
+        <div style="display: flex; gap: var(--bx-spacing-md);">
+            <button type="submit" style="background: var(--bx-color-primary); color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">Create Role</button>
+            <a href="{% url 'role_list' %}" style="padding: 0.5rem 1rem; border: 1px solid var(--bx-color-border); border-radius: 4px; text-decoration: none; color: inherit;">Cancel</a>
+        </div>
+
+    </form>
+</div>
+{% endblock %}

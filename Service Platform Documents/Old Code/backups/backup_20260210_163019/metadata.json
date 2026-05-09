@@ -1,0 +1,11 @@
+{
+  "backup_id": "backup_20260210_163019",
+  "timestamp": "2026-02-10T22:30:19.456345+00:00",
+  "app_version": "core-v1.0-complete",
+  "schema_version": "1.0.0",
+  "database_version": "PostgreSQL 18.1",
+  "install_mode": "solo",
+  "database_file": "database.sql.gz",
+  "files_archive": "files.tar.gz",
+  "file_count": 0
+}

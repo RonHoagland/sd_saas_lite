@@ -1,0 +1,94 @@
+{% extends "_section_base.html" %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <a href="{% url 'payments' %}">Payments</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">{{ payment.payment_number|default:"Payment" }}</span>
+{% endblock %}
+
+{% block section_subtitle %}
+  <p class="small text-body-secondary mb-0 mt-1">
+    Payment · {{ payment.payment_number|default:"unsaved" }} · <span>{{ payment.status }}</span>
+  </p>
+{% endblock %}
+
+{% block section_actions %}
+  <a href="{% url 'payments' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+    <i data-lucide="arrow-left"></i> Back
+  </a>
+{% endblock %}
+
+{% block section_body %}
+<div class="row g-3">
+
+  <div class="col-12 col-lg-8">
+    <div class="sd-section-card p-4">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Payment Details</h2>
+      <dl class="row g-3 mb-0 small">
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Amount</dt>
+          <dd class="mb-0 fw-semibold">${{ payment.amount|floatformat:2 }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Payment Date</dt>
+          <dd class="mb-0">{{ payment.payment_date|date:"M j, Y" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Method</dt>
+          <dd class="mb-0">{{ payment.method }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Status</dt>
+          <dd class="mb-0">{{ payment.status }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Reference #</dt>
+          <dd class="mb-0">{{ payment.reference_number|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Bank</dt>
+          <dd class="mb-0">{{ payment.bank.name|default:"—" }}</dd>
+        </div>
+        {% if payment.notes %}
+        <div class="col-12">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Notes</dt>
+          <dd class="mb-0" style="white-space:pre-wrap;">{{ payment.notes }}</dd>
+        </div>
+        {% endif %}
+      </dl>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="sd-section-card p-4 mb-3">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Applied To</h2>
+      <dl class="small mb-0">
+        <dt class="form-label small fw-medium text-body-secondary mb-1">Invoice</dt>
+        <dd class="mb-2">
+          {% if payment.invoice %}
+            <a href="{% url 'invoice-detail' payment.invoice.pk %}" class="link-brand text-decoration-none">{{ payment.invoice.invoice_number|default:"Invoice" }}</a>
+          {% else %}—{% endif %}
+        </dd>
+        <dt class="form-label small fw-medium text-body-secondary mb-1">Customer</dt>
+        <dd class="mb-0">
+          {% if payment.invoice.customer %}
+            <a href="{% url 'customer-detail' payment.invoice.customer.pk %}" class="link-brand text-decoration-none">{{ payment.invoice.customer }}</a>
+          {% else %}—{% endif %}
+        </dd>
+      </dl>
+    </div>
+
+    <div class="sd-section-card p-4">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Record Info</h2>
+      <div class="small text-body-secondary">
+        <div>Created {{ payment.created_on|date:"M j, Y" }} by {{ payment.created_by|default:"system" }}</div>
+        <div>Updated {{ payment.updated_on|date:"M j, Y" }} by {{ payment.updated_by|default:"system" }}</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

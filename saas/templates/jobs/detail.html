@@ -1,0 +1,114 @@
+{% extends "_section_base.html" %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <a href="{% url 'jobs' %}">Jobs</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">{{ job.wo_number|default:"Job" }}</span>
+{% endblock %}
+
+{% block section_subtitle %}
+  <p class="small text-body-secondary mb-0 mt-1">
+    Job · {{ job.wo_number|default:"unassigned #" }} · <span>{{ job.status }}</span>
+  </p>
+{% endblock %}
+
+{% block section_actions %}
+  <a href="{% url 'jobs' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+    <i data-lucide="arrow-left"></i> Back
+  </a>
+{% endblock %}
+
+{% block section_body %}
+<div class="row g-3">
+
+  <div class="col-12 col-lg-8">
+    <div class="sd-section-card p-4 mb-3">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Job Details</h2>
+      <dl class="row g-3 mb-0 small">
+        <div class="col-12">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Subject</dt>
+          <dd class="mb-0">{{ job.subject }}</dd>
+        </div>
+        {% if job.description %}
+        <div class="col-12">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Description</dt>
+          <dd class="mb-0" style="white-space:pre-wrap;">{{ job.description }}</dd>
+        </div>
+        {% endif %}
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Status</dt>
+          <dd class="mb-0">{{ job.status }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Priority</dt>
+          <dd class="mb-0">{{ job.priority }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Scheduled Date</dt>
+          <dd class="mb-0">{{ job.scheduled_date|date:"M j, Y"|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Scheduled Time</dt>
+          <dd class="mb-0">{{ job.scheduled_time|time:"g:i A"|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Assigned To</dt>
+          <dd class="mb-0">{{ job.assigned_to.username|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Estimated Hours</dt>
+          <dd class="mb-0">{{ job.estimated_hours|default:"—" }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="sd-section-card p-4">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h2 class="h6 fw-semibold text-body-secondary mb-0">Line Items</h2>
+        <span class="small text-body-secondary">Total ${{ job.total_amount|floatformat:2 }}</span>
+      </div>
+      <div class="small text-body-secondary">
+        Line-item drawer wired in Phase 4.3 (per spec §19).
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="sd-section-card p-4 mb-3">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Linked Records</h2>
+      <dl class="small mb-0">
+        <dt class="form-label small fw-medium text-body-secondary mb-1">Customer</dt>
+        <dd class="mb-2">
+          {% if job.customer %}
+            <a href="{% url 'customer-detail' job.customer.pk %}" class="link-brand text-decoration-none">{{ job.customer }}</a>
+          {% else %}—{% endif %}
+        </dd>
+        <dt class="form-label small fw-medium text-body-secondary mb-1">Asset</dt>
+        <dd class="mb-2">
+          {% if job.asset %}
+            <a href="{% url 'asset-detail' job.asset.pk %}" class="link-brand text-decoration-none">{{ job.asset }}</a>
+          {% else %}—{% endif %}
+        </dd>
+        <dt class="form-label small fw-medium text-body-secondary mb-1">Source Service Request</dt>
+        <dd class="mb-0">
+          {% if job.service_request %}
+            <a href="{% url 'request-detail' job.service_request.pk %}" class="link-brand text-decoration-none">{{ job.service_request.request_number }}</a>
+          {% else %}—{% endif %}
+        </dd>
+      </dl>
+    </div>
+
+    <div class="sd-section-card p-4">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Record Info</h2>
+      <div class="small text-body-secondary">
+        <div>Created {{ job.created_on|date:"M j, Y" }} by {{ job.created_by|default:"system" }}</div>
+        <div>Updated {{ job.updated_on|date:"M j, Y" }} by {{ job.updated_by|default:"system" }}</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

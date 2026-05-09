@@ -1,0 +1,101 @@
+{% extends "layouts/app_shell.html" %}
+{% load core_filters phone_formatting %}
+
+{% block title %}User Detail - BrixaWares{% endblock %}
+{% block page_title %}User: {{ user_obj.username }}{% endblock %}
+
+{% block main_content %}
+<div class="card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border); max-width: 600px;">
+    
+    <div style="margin-bottom: var(--bx-spacing-lg);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--bx-spacing-sm);">
+            <h3 style="margin: 0;">Profile</h3>
+            <a href="{% url 'user_edit' user_obj.pk %}" style="background: var(--bx-color-bg-surface); border: 1px solid var(--bx-color-border); padding: 4px 12px; border-radius: 4px; text-decoration: none; color: var(--bx-color-text); font-size: 0.9em;">
+                ✎ Edit User
+            </a>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--bx-spacing-sm); margin-bottom: var(--bx-spacing-md);">
+            <div>
+                <p><strong>Username:</strong> {{ user_obj.username }}</p>
+                <p><strong>Full Name:</strong> {{ user_obj.get_full_name|default:"-" }}</p>
+                <p><strong>Email:</strong> {{ user_obj.email|default:"N/A" }}</p>
+            </div>
+            <div>
+                <p><strong>Position:</strong> {{ user_obj.profile.position|default:"-" }}</p>
+                <p><strong>Phone:</strong> {{ user_obj.profile.phone_number|phone_format|default:"-" }}</p>
+                <p><strong>Display Name:</strong> {{ user_obj.profile.display_name|default:"-" }}</p>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--bx-spacing-sm); margin-bottom: var(--bx-spacing-md);">
+            <div>
+                 <p><strong>Gender:</strong> {{ user_obj.profile.get_gender_display|default:"-" }}</p>
+                 <p><strong>Birthday:</strong> {{ user_obj.profile.birthday|date:"M d, Y"|default:"-" }}</p>
+            </div>
+             <div>
+                <p><strong>Date Joined:</strong> {{ user_obj.date_joined|date:"M d, Y" }}</p>
+                <p><strong>Date Left:</strong> {{ user_obj.profile.date_left|date:"M d, Y"|default:"-" }}</p>
+                <p><strong>Last Login:</strong> {{ user_obj.last_login|default:"Never" }}</p>
+            </div>
+        </div>
+        
+        {% if user_obj.profile.notes %}
+        <div style="margin-top: var(--bx-spacing-md); padding: var(--bx-spacing-md); background: var(--bx-color-bg-body); border-radius: 4px;">
+            <p style="margin: 0; font-weight: 500;">Notes:</p>
+            <p style="margin: 0; color: var(--bx-color-text-muted);">{{ user_obj.profile.notes|linebreaksbr }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="margin-bottom: var(--bx-spacing-lg);">
+        <h3 style="margin-bottom: var(--bx-spacing-sm);">Status</h3>
+        <div style="display: flex; align-items: center; gap: var(--bx-spacing-md);">
+            <span>
+                Currently: 
+                {% if user_obj.is_active %}
+                <strong style="color: var(--bx-color-success);">Active</strong>
+                {% else %}
+                <strong style="color: var(--bx-color-danger);">Inactive</strong>
+                {% endif %}
+            </span>
+            
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_active">
+                <button type="submit" style="padding: 0.25rem 0.75rem; border: 1px solid var(--bx-color-border); border-radius: 4px; background: var(--bx-color-bg-body); cursor: pointer;">
+                    {% if user_obj.is_active %}Deactivate{% else %}Activate{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Roles Section -->
+    <div style="margin-bottom: var(--bx-spacing-lg); border-top: 1px solid var(--bx-color-border); padding-top: var(--bx-spacing-lg);">
+        <h3 style="margin-bottom: var(--bx-spacing-sm);">Role Management</h3>
+        
+        <div style="background: var(--bx-color-bg-body); padding: var(--bx-spacing-md); border-radius: 4px; margin-bottom: var(--bx-spacing-md);">
+            <p style="margin: 0; margin-bottom: 8px; color: var(--bx-color-text-muted);">Current Role:</p>
+            {% if user_obj.user_roles.exists %}
+                {% with current_role=user_obj.user_roles.first.role %}
+                <div style="font-size: 1.1em; font-weight: 500; color: var(--bx-color-primary);">
+                    {{ current_role.name }} <span style="font-size: 0.8em; color: var(--bx-color-text-muted); font-weight: normal;">({{ current_role.key }})</span>
+                </div>
+                <p style="margin: 0; margin-top: 4px; font-size: 0.9em;">{{ current_role.description }}</p>
+                {% endwith %}
+            {% else %}
+                <p style="color: var(--bx-color-danger); font-weight: bold;">No Role Assigned (Invalid State)</p>
+            {% endif %}
+        </div>
+        
+        <p style="font-size: 0.9em; color: var(--bx-color-text-muted);">
+            To change the user's role, please <a href="{% url 'user_edit' user_obj.pk %}">edit the user profile</a>.
+        </p>
+    </div>
+
+    <div style="margin-bottom: var(--bx-spacing-lg);">
+        <a href="{% url 'user_list' %}" style="text-decoration: underline; color: var(--bx-color-text-muted);">Back to Users</a>
+    </div>
+
+</div>
+{% endblock %}

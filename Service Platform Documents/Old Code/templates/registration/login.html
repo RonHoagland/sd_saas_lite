@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Login - BrixaWares{% endblock %}
+
+{% block content %}
+<div class="login-container" style="display: flex; height: 100vh; align-items: center; justify-content: center; background-color: var(--bx-color-bg-body);">
+    <div class="login-box" style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); width: 100%; max-width: 400px;">
+        <h1 style="margin-bottom: 2rem; text-align: center; color: var(--bx-color-primary);">BrixaWares</h1>
+        
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div style="background-color: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                <p>Your username and password didn't match. Please try again.</p>
+            </div>
+            {% endif %}
+
+            <div style="margin-bottom: 1rem;">
+                <label for="id_username" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Username</label>
+                {{ form.username }}
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <label for="id_password" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password</label>
+                {{ form.password }}
+            </div>
+
+            <button type="submit" style="width: 100%; padding: 0.75rem; background-color: var(--bx-color-primary); color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                Log In
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Scoped styles for login form inputs to match theme */
+    .login-box input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--bx-color-border);
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    .login-box input:focus {
+        outline: 2px solid var(--bx-color-primary);
+        border-color: transparent;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}ServizDesk Lite{% endblock %}</title>
+
+  {% comment %}Bootstrap 5 + Lucide + site overrides — all vendored (see static/vendor/). Rationale: app must run behind firewalls with no outbound internet.{% endcomment %}
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-5.3.3/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}?v={{ SERVIZDESK_UI_ASSET_VERSION }}">
+  <script defer src="{% static 'vendor/bootstrap-5.3.3/js/bootstrap.bundle.min.js' %}"></script>
+  <script defer src="{% static 'vendor/lucide-0.469.0/lucide.min.js' %}"></script>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  {# Drawer — reusable Bootstrap offcanvas. Populate via ServizDesk.openDrawer(title, subtitle, bodyHTML). #}
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="sd-drawer" aria-labelledby="sd-drawer-title">
+    <div class="offcanvas-header border-bottom">
+      <div>
+        <h5 class="offcanvas-title mb-0" id="sd-drawer-title">Edit</h5>
+        <div class="text-muted small" id="sd-drawer-subtitle"></div>
+      </div>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body" id="sd-drawer-body"></div>
+    <div class="offcanvas-footer border-top d-flex justify-content-end gap-2 p-3">
+      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancel</button>
+      <button type="button" class="btn btn-primary" data-drawer-save>
+        <i data-lucide="check"></i> Save Changes
+      </button>
+    </div>
+  </div>
+
+  <div class="sd-app-shell">
+
+    {# Sidebar — tier-aware via context variables (is_admin, tier, etc.) #}
+    {% include "includes/app_sidebar.html" %}
+
+    <div class="sd-right-pane">
+
+      {# Topbar — tenant name, breadcrumb, search, New Request, utility icons #}
+      <header class="sd-topbar">
+        <div class="sd-topbar-tenant">{{ tenant_name|default:"Workspace" }}</div>
+        <nav class="sd-topbar-breadcrumb" aria-label="Breadcrumb">
+          {% block breadcrumb %}{% endblock %}
+        </nav>
+        <div class="flex-grow-1"></div>
+        <div class="sd-topbar-search">
+          <i data-lucide="search"></i>
+          <input type="search" placeholder="Search customers, jobs, invoices…" aria-label="Search" />
+        </div>
+        {% comment %}"New Request" — per spec §3 critical rule, persistent on every authenticated screen. URL wired in Phase 2.1; placeholder for now.{% endcomment %}
+        <a href="#" class="btn btn-primary d-inline-flex align-items-center gap-1" aria-label="New Request">
+          <i data-lucide="plus"></i> <span>New Request</span>
+        </a>
+        <button class="sd-util-btn" title="Notifications" aria-label="Notifications">
+          <i data-lucide="bell"></i>
+          <span class="sd-util-btn-dot"></span>
+        </button>
+        <button class="sd-util-btn" title="Help" aria-label="Help">
+          <i data-lucide="help-circle"></i>
+        </button>
+        {% if is_admin or is_system_user %}
+        <a class="sd-util-btn" href="{% url 'tenant-preferences' %}" title="Company Settings" aria-label="Company Settings">
+          <i data-lucide="settings"></i>
+        </a>
+        {% endif %}
+      </header>
+
+      <main class="sd-main">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <script nonce="{{ request.csp_nonce }}">
+    // ServizDesk shell helpers. Kept intentionally small; page-specific behavior
+    // belongs in the per-page extra_js block or a page module.
+    window.ServizDesk = window.ServizDesk || {};
+
+    ServizDesk.openDrawer = function (title, subtitle, bodyHTML) {
+      document.getElementById('sd-drawer-title').textContent = title || 'Edit';
+      document.getElementById('sd-drawer-subtitle').textContent = subtitle || '';
+      document.getElementById('sd-drawer-body').innerHTML = bodyHTML || '';
+      var el = document.getElementById('sd-drawer');
+      bootstrap.Offcanvas.getOrCreateInstance(el).show();
+      if (window.lucide) lucide.createIcons();
+    };
+    ServizDesk.closeDrawer = function () {
+      var el = document.getElementById('sd-drawer');
+      var oc = bootstrap.Offcanvas.getInstance(el);
+      if (oc) oc.hide();
+    };
+
+    function sdInit() {
+      // Inline-edit pattern (section-card with pencil). Single delegated listener.
+      document.addEventListener('click', function (e) {
+        var pencil = e.target.closest('[data-edit-toggle]');
+        if (pencil) {
+          var card = pencil.closest('.sd-section-card');
+          if (!card) return;
+          document.querySelectorAll('.sd-section-card.editing').forEach(function (c) {
+            if (c !== card) c.classList.remove('editing');
+          });
+          card.classList.add('editing');
+          var first = card.querySelector('.edit-mode input, .edit-mode select, .edit-mode textarea');
+          if (first && !first.readOnly) first.focus();
+          return;
+        }
+        var cancel = e.target.closest('[data-edit-cancel]');
+        if (cancel) {
+          var cancelCard = cancel.closest('.sd-section-card');
+          if (cancelCard) cancelCard.classList.remove('editing');
+          return;
+        }
+        var save = e.target.closest('[data-edit-save]');
+        if (save) {
+          var saveCard = save.closest('.sd-section-card');
+          if (saveCard) saveCard.classList.remove('editing');
+        }
+      });
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', sdInit);
+    } else {
+      sdInit();
+    }
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,142 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ServizDesk — Sign In</title>
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-5.3.3/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}?v={{ SERVIZDESK_UI_ASSET_VERSION }}">
+  <script defer src="{% static 'vendor/bootstrap-5.3.3/js/bootstrap.bundle.min.js' %}"></script>
+  <script defer src="{% static 'vendor/lucide-0.469.0/lucide.min.js' %}"></script>
+  <style>
+    html, body { height: 100%; }
+    .sd-login-shell { min-height: 100vh; }
+    .sd-login-left { padding: 40px 48px; display: flex; flex-direction: column; background: #fff; }
+    .sd-login-right {
+      padding: 40px 48px;
+      background: var(--sd-brand-primary);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .sd-login-right::before {
+      content: ""; position: absolute; inset: 0; opacity: 0.2;
+      background:
+        radial-gradient(circle at 20% 20%, #fff 0, transparent 40%),
+        radial-gradient(circle at 80% 80%, #fff 0, transparent 35%);
+      pointer-events: none;
+    }
+    .sd-login-right > * { position: relative; }
+    .sd-login-hero-icon {
+      width: 80px; height: 80px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(6px);
+      margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sd-login-hero-icon [data-lucide] { width: 36px; height: 36px; }
+    .sd-login-divider { height: 1px; width: 64px; background: rgba(255, 255, 255, 0.4); margin: 20px auto; }
+  </style>
+</head>
+<body>
+
+  <div class="container-fluid p-0">
+    <div class="row g-0 sd-login-shell">
+
+      {# LEFT: brand + sign-in form #}
+      <div class="col-12 col-lg-6 sd-login-left">
+
+        <div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="sd-sidebar-brand-mark" style="height:40px;width:40px;font-size:14px;">SD</div>
+            <div>
+              <div class="fw-semibold text-body-emphasis" style="font-size:15px;line-height:1.2;">ServizDesk</div>
+              <div class="small text-body-secondary">v{{ app_version }} Lite</div>
+            </div>
+          </div>
+          <p class="small text-body-secondary mt-2 mb-0">{{ current_date }}</p>
+        </div>
+
+        <div class="flex-grow-1 d-flex align-items-center">
+          <div class="w-100" style="max-width:384px;margin:0 auto;">
+            <h1 class="h3 fw-semibold text-body-emphasis mb-1">Sign in</h1>
+            <p class="text-body-secondary mb-4">Enter your credentials to continue</p>
+
+            <form method="post" action="" novalidate>
+              {% csrf_token %}
+
+              {% if error %}
+                <div class="alert alert-danger py-2 px-3 small" role="alert">{{ error }}</div>
+              {% endif %}
+
+              <div class="mb-3">
+                <label for="workspace" class="form-label small fw-medium text-body-secondary">Workspace</label>
+                <input id="workspace" name="workspace" type="text" class="form-control"
+                       autocomplete="organization" autocapitalize="none" spellcheck="false"
+                       placeholder="e.g. acme"
+                       value="{{ workspace|default:'' }}"
+                       autofocus />
+                <div class="form-text small">Your tenant identifier.</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="username" class="form-label small fw-medium text-body-secondary">Username</label>
+                <input id="username" name="username" type="text" class="form-control"
+                       autocomplete="username" autocapitalize="none" spellcheck="false"
+                       value="{{ username|default:'' }}" />
+              </div>
+
+              <div class="mb-3">
+                <label for="password" class="form-label small fw-medium text-body-secondary">Password</label>
+                <input id="password" name="password" type="password" class="form-control" autocomplete="current-password" />
+              </div>
+
+              <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="remember" id="remember" />
+                  <label class="form-check-label small text-body-secondary" for="remember">Remember me</label>
+                </div>
+                <a href="#" class="small link-brand text-decoration-none">Forgot password?</a>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100">Sign In</button>
+            </form>
+          </div>
+        </div>
+
+        <p class="small text-body-secondary lh-base mb-0">
+          By signing in you agree to the ServizDesk Terms of Service and Privacy Policy.
+          Unauthorized access is prohibited.
+        </p>
+      </div>
+
+      {# RIGHT: tenant branding + news #}
+      <div class="col-12 col-lg-6 sd-login-right d-none d-lg-flex">
+        <div class="text-center" style="max-width:448px;">
+          <div class="sd-login-hero-icon">
+            <i data-lucide="building-2"></i>
+          </div>
+          <h2 class="h2 fw-semibold mb-2">{{ tenant_name }}</h2>
+          <div class="sd-login-divider"></div>
+          <h3 class="h5 fw-semibold mb-3">Tenant Company News</h3>
+          <div class="text-start small" style="color:rgba(255,255,255,0.85);">
+            {% for a in announcements|slice:":3" %}
+              <p class="mb-3">{{ a }}</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script nonce="{{ request.csp_nonce }}">
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { if (window.lucide) lucide.createIcons(); });
+    } else {
+      if (window.lucide) lucide.createIcons();
+    }
+  </script>
+</body>
+</html>

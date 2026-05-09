@@ -1,0 +1,22 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}Delete {{ object.name }}{% endblock %}
+{% block page_title %}Delete Value List{% endblock %}
+
+{% block main_content %}
+<div style="max-width: 600px; margin: 0 auto; padding-top: 40px;">
+    <div class="card" style="background: white; padding: var(--bx-spacing-xl); border-radius: 8px; border: 1px solid var(--bx-color-border); text-align: center;">
+        <h2 style="color: var(--bx-color-danger); margin-top: 0;">Are you sure?</h2>
+        <p>You are about to delete the value list <strong>"{{ object.name }}"</strong>.</p>
+        <p style="color: var(--bx-color-text-muted);">This action cannot be undone.</p>
+        
+        <form method="post" style="margin-top: 32px; display: flex; justify-content: center; gap: 16px;">
+            {% csrf_token %}
+            <a href="{% url 'value_list_list' %}" class="btn" style="padding: 10px 24px; border: 1px solid var(--bx-color-border); border-radius: 4px; text-decoration: none; color: var(--bx-color-text);">Cancel</a>
+            <button type="submit" class="btn" style="background: var(--bx-color-danger); color: white; padding: 10px 24px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                Yes, Delete List
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

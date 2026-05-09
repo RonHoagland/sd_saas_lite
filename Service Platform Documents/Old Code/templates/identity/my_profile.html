@@ -1,0 +1,136 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}My Profile - BrixaWares{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block main_content %}
+<div class="card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border); max-width: 800px;">
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: var(--bx-spacing-xl);">
+            <h3 style="margin-bottom: var(--bx-spacing-md); border-bottom: 1px solid var(--bx-color-border); padding-bottom: var(--bx-spacing-sm);">My Account</h3>
+            
+            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--bx-spacing-md);">
+                <div class="form-group">
+                    <label for="{{ user_form.username.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Username</label>
+                    {{ user_form.username }}
+                    {% if user_form.username.errors %}
+                    <small style="color: var(--bx-color-danger);">{{ user_form.username.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ user_form.email.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email</label>
+                    {{ user_form.email }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ user_form.first_name.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">First Name</label>
+                    {{ user_form.first_name }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ user_form.last_name.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Last Name</label>
+                    {{ user_form.last_name }}
+                </div>
+            </div>
+
+            <!-- Role Display (Read Only) -->
+            {% if user_form.role %}
+            <div class="form-group" style="margin-top: var(--bx-spacing-md);">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Role</label>
+                <input type="text" class="form-control" value="{{ user.user_roles.first.role.name|default:'No Role' }}" disabled style="background: var(--bx-color-bg-body);">
+                <small style="color: var(--bx-color-text-muted);">Roles are managed by administrators.</small>
+            </div>
+            {% endif %}
+            
+            <!-- Password Change Section -->
+            <div style="margin-top: var(--bx-spacing-lg); padding: var(--bx-spacing-md); background: var(--bx-color-bg-surface); border: 1px solid var(--bx-color-border); border-radius: 4px;">
+                <h4 style="margin-top: 0; margin-bottom: var(--bx-spacing-sm);">Change Password</h4>
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--bx-spacing-md);">
+                    <div class="form-group">
+                        <label for="{{ user_form.password.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">New Password</label>
+                        {{ user_form.password }}
+                        {% if user_form.password.help_text %}
+                        <small style="color: var(--bx-color-text-muted);">{{ user_form.password.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ user_form.password_confirm.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Confirm Password</label>
+                        {{ user_form.password_confirm }}
+                        {% if user_form.password_confirm.errors %}
+                        <small style="color: var(--bx-color-danger);">{{ user_form.password_confirm.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: var(--bx-spacing-xl);">
+            <h3 style="margin-bottom: var(--bx-spacing-md); border-bottom: 1px solid var(--bx-color-border); padding-bottom: var(--bx-spacing-sm);">My Profile Details</h3>
+            
+            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--bx-spacing-md);">
+                <div class="form-group">
+                    <label for="{{ profile_form.display_name.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Display Name</label>
+                    {{ profile_form.display_name }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ profile_form.position.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Position / Title</label>
+                    {{ profile_form.position }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ profile_form.phone_number.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Phone Number</label>
+                    {{ profile_form.phone_number }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ profile_form.gender.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Gender</label>
+                    {{ profile_form.gender }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ profile_form.birthday.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Birthday</label>
+                    {{ profile_form.birthday }}
+                </div>
+                
+                 <div class="form-group">
+                    <label for="{{ profile_form.time_zone.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Time Zone</label>
+                    {{ profile_form.time_zone }}
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: var(--bx-spacing-md);">
+                <label for="{{ profile_form.notes.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">My Notes</label>
+                {{ profile_form.notes }}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: var(--bx-spacing-md); margin-top: var(--bx-spacing-lg);">
+            <button type="submit" style="background: var(--bx-color-primary); color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                Save Changes
+            </button>
+            <a href="{% url 'dashboard' %}" style="padding: 0.75rem 1.5rem; border: 1px solid var(--bx-color-border); border-radius: 4px; background: white; text-decoration: none; color: var(--bx-color-text);">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-control, .form-select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--bx-color-border);
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    .form-control:focus, .form-select:focus {
+        outline: 2px solid var(--bx-color-primary);
+        border-color: transparent;
+    }
+</style>
+{% endblock %}

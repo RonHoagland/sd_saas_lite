@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard · ServizDesk Lite{% endblock %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-secondary">Dashboard</span>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4" style="max-width:1400px;">
+
+  {# Greeting header #}
+  <div class="d-flex align-items-start justify-content-between mb-4">
+    <div>
+      <p class="text-body-secondary small mb-1">{{ current_date }}</p>
+      <h1 class="h3 fw-semibold text-body-emphasis mb-0">
+        Good afternoon, {{ request.user.first_name|default:request.user.username }}
+      </h1>
+    </div>
+  </div>
+
+  <h2 class="h6 fw-semibold text-body-emphasis mb-3">Workflow</h2>
+
+  {% comment %}KPI stat strip — Lite spec §4 KPIs. Counts come from home_view (Phase 1.4), tenant-scoped via TenantManager. Each card links to its list page.{% endcomment %}
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-6 col-xl-3">
+      <a href="{% url 'requests' %}" class="sd-stat-card text-decoration-none text-reset d-block" style="--sd-stat-accent:#f97316;">
+        <div class="sd-stat-card-label"><i data-lucide="inbox"></i> Requests</div>
+        <div class="sd-stat-card-value">{{ stats.service_requests|default:0 }}</div>
+        <div class="sd-stat-card-sub">Open</div>
+      </a>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+      <a href="{% url 'quotes' %}" class="sd-stat-card text-decoration-none text-reset d-block" style="--sd-stat-accent:#ef4444;">
+        <div class="sd-stat-card-label"><i data-lucide="file-text"></i> Quotes</div>
+        <div class="sd-stat-card-value">{{ stats.open_quotes|default:0 }}</div>
+        <div class="sd-stat-card-sub">Draft &amp; Sent</div>
+      </a>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+      <a href="{% url 'jobs' %}" class="sd-stat-card text-decoration-none text-reset d-block" style="--sd-stat-accent:#22c55e;">
+        <div class="sd-stat-card-label"><i data-lucide="clipboard-list"></i> Jobs</div>
+        <div class="sd-stat-card-value">{{ stats.open_work_orders|default:0 }}</div>
+        <div class="sd-stat-card-sub">Open, Scheduled &amp; In Progress</div>
+      </a>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+      <a href="{% url 'invoices' %}" class="sd-stat-card text-decoration-none text-reset d-block" style="--sd-stat-accent:#eab308;">
+        <div class="sd-stat-card-label"><i data-lucide="receipt"></i> Invoices</div>
+        <div class="sd-stat-card-value">{{ stats.unpaid_invoices|default:0 }}</div>
+        <div class="sd-stat-card-sub">Draft &amp; Sent</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-3">
+
+    {% comment %}Today's Schedule — Lite spec §5. WorkOrders where scheduled_date == today, ordered by time. Empty-state shows when none.{% endcomment %}
+    <div class="col-12 col-lg-8">
+      <div class="sd-section-card p-4 h-100">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h3 class="h6 fw-semibold text-body-emphasis mb-0">Today&rsquo;s Schedule</h3>
+          <a href="{% url 'schedule' %}" class="small link-brand text-decoration-none">View schedule</a>
+        </div>
+        {% if todays_jobs %}
+          <ul class="list-group list-group-flush">
+            {% for job in todays_jobs %}
+              <li class="list-group-item d-flex justify-content-between align-items-start px-0">
+                <div>
+                  <div class="fw-medium">{{ job.customer_name }}</div>
+                  <div class="small text-body-secondary">{{ job.short_description }}</div>
+                </div>
+                <span class="badge text-bg-light">{{ job.scheduled_time|default:"—" }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="border border-dashed rounded-3 py-5 text-center">
+            <div class="text-body-secondary small mb-3">You have no visits scheduled today.</div>
+            <button class="btn btn-outline-secondary btn-sm">
+              <i data-lucide="calendar-plus"></i> Schedule a Job
+            </button>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Business performance side panel #}
+    <div class="col-12 col-lg-4">
+      <div class="sd-section-card p-4 h-100">
+        <h3 class="h6 fw-semibold text-body-emphasis mb-3">Business Performance</h3>
+
+        <a href="#" class="d-block text-decoration-none text-reset py-2 border-bottom">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="fw-medium">Receivables</div>
+            <i data-lucide="chevron-right" class="text-body-secondary"></i>
+          </div>
+          <div class="small text-body-secondary mt-1">0 clients owe you</div>
+        </a>
+
+        <a href="#" class="d-block text-decoration-none text-reset py-2 border-bottom">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="fw-medium">Upcoming Jobs</div>
+            <i data-lucide="chevron-right" class="text-body-secondary"></i>
+          </div>
+          <div class="small text-body-secondary mt-1">This week</div>
+        </a>
+
+        <a href="#" class="d-block text-decoration-none text-reset py-2">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="fw-medium">Revenue</div>
+            <i data-lucide="chevron-right" class="text-body-secondary"></i>
+          </div>
+          <div class="small text-body-secondary mt-1">This month</div>
+          <div class="fs-5 fw-semibold mt-2">$0</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

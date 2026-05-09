@@ -1,0 +1,65 @@
+{% extends "_section_base.html" %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">Assets</span>
+{% endblock %}
+
+{% block section_actions %}
+  <a href="#" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+    <i data-lucide="plus"></i> New Asset
+  </a>
+{% endblock %}
+
+{% block section_body %}
+<div class="sd-section-card overflow-hidden">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">#</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Name</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Customer</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Manufacturer</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Model</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in assets %}
+        <tr>
+          <td class="text-body-secondary">{{ a.asset_number|default:"—" }}</td>
+          <td>
+            <a href="{% url 'asset-detail' a.pk %}" class="link-brand text-decoration-none fw-medium">
+              {{ a.name }}
+            </a>
+          </td>
+          <td class="text-body-secondary">
+            {% if a.customer %}
+              <a href="{% url 'customer-detail' a.customer.pk %}" class="link-brand text-decoration-none">{{ a.customer }}</a>
+            {% else %}—{% endif %}
+          </td>
+          <td class="text-body-secondary">{{ a.manufacturer|default:"—" }}</td>
+          <td class="text-body-secondary">{{ a.model_number|default:"—" }}</td>
+          <td>
+            {% if a.status == 'Active' %}
+              <span class="badge bg-success-subtle text-success-emphasis">Active</span>
+            {% else %}
+              <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ a.status }}</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{% url 'asset-detail' a.pk %}" class="link-brand text-decoration-none small">View</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center text-body-secondary py-5">No assets yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

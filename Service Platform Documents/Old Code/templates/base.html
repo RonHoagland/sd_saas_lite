@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BrixaWares{% endblock %}</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/variables.css' %}">
+    <link rel="stylesheet" href="{% static 'css/reset.css' %}">
+    
+    {% if ui_theme_color %}
+    <style>
+        :root {
+            --bx-color-secondary: {{ ui_theme_color }};
+            /* Optional: If primary should also match, uncomment below */
+            /* --bx-color-primary: {{ ui_theme_color }}; */
+        }
+    </style>
+    {% endif %}
+    
+    {% block extra_css %}{% endblock %}
+
+    <!-- HTMX -->
+    <script src="{% static 'js/htmx.min.js' %}"></script>
+    <meta name="htmx-config" content='{"historyCacheSize": 20}'>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    {% include "includes/modal.html" %}
+    
+    {% if messages %}
+    <div style="position: fixed; top: 1rem; right: 1rem; z-index: 100; display: flex; flex-direction: column; gap: 0.5rem;">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" style="padding: 1rem; border-radius: 4px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid {% if message.tags == 'success' %}var(--bx-color-success){% elif message.tags == 'error' %}var(--bx-color-danger){% else %}var(--bx-color-info){% endif %};">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+    <!-- JavaScript -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,34 @@
+/* BrixaWares Design Tokens */
+:root {
+    /* Brand Colors */
+    --bx-color-primary: #2563eb;
+    --bx-color-primary-dark: #1d4ed8;
+    --bx-color-secondary: #475569;
+    
+    /* Neutral Colors */
+    --bx-color-bg-body: #f8fafc;
+    --bx-color-bg-surface: #ffffff;
+    --bx-color-text-main: #1e293b;
+    --bx-color-text-muted: #64748b;
+    --bx-color-border: #e2e8f0;
+
+    /* Status Colors */
+    --bx-color-success: #10b981;
+    --bx-color-warning: #f59e0b;
+    --bx-color-danger: #ef4444;
+    --bx-color-info: #3b82f6;
+
+    /* Spacing */
+    --bx-spacing-xs: 0.25rem;
+    --bx-spacing-sm: 0.5rem;
+    --bx-spacing-md: 1rem;
+    --bx-spacing-lg: 1.5rem;
+    --bx-spacing-xl: 2rem;
+
+    /* Typography */
+    --bx-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --bx-font-size-sm: 0.875rem;
+    --bx-font-size-base: 1rem;
+    --bx-font-size-lg: 1.125rem;
+    --bx-font-size-xl: 1.25rem;
+}

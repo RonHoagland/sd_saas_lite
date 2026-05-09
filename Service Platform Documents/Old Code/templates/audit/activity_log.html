@@ -1,0 +1,72 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}Activity Log - BrixaWares{% endblock %}
+{% block page_title %}Audit Logs{% endblock %}
+
+{% block main_content %}
+<div class="card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border);">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid var(--bx-color-border); text-align: left;">
+                <th style="padding: var(--bx-spacing-sm);">
+                    <a href="?sort=event_ts&dir={% if current_sort == 'event_ts' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 4px;">
+                        Time
+                        {% if current_sort == 'event_ts' %}{{ current_dir|yesno:"↓,↑" }}{% endif %}
+                    </a>
+                </th>
+                <th style="padding: var(--bx-spacing-sm);">
+                     <a href="?sort=user__username&dir={% if current_sort == 'user__username' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 4px;">
+                        User
+                        {% if current_sort == 'user__username' %}{{ current_dir|yesno:"↓,↑" }}{% endif %}
+                    </a>
+                </th>
+                <th style="padding: var(--bx-spacing-sm);">
+                    <a href="?sort=event_type&dir={% if current_sort == 'event_type' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 4px;">
+                        Action
+                        {% if current_sort == 'event_type' %}{{ current_dir|yesno:"↓,↑" }}{% endif %}
+                    </a>
+                </th>
+                <th style="padding: var(--bx-spacing-sm);">
+                    <a href="?sort=entity_type&dir={% if current_sort == 'entity_type' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 4px;">
+                        Entity
+                        {% if current_sort == 'entity_type' %}{{ current_dir|yesno:"↓,↑" }}{% endif %}
+                    </a>
+                </th>
+                <th style="padding: var(--bx-spacing-sm);">
+                    <a href="?sort=summary&dir={% if current_sort == 'summary' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 4px;">
+                        Summary
+                        {% if current_sort == 'summary' %}{{ current_dir|yesno:"↓,↑" }}{% endif %}
+                    </a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr style="border-bottom: 1px solid var(--bx-color-border);">
+                <td style="padding: var(--bx-spacing-sm); white-space: nowrap;">{{ log.local_timestamp_display }}</td>
+                <td style="padding: var(--bx-spacing-sm);">{{ log.user.username }}</td>
+                <td style="padding: var(--bx-spacing-sm);">
+                    {% if log.event_type == 'create' %}
+                    <span style="color: var(--bx-color-success); font-weight: 500;">Create</span>
+                    {% elif log.event_type == 'delete' %}
+                    <span style="color: var(--bx-color-danger); font-weight: 500;">Delete</span>
+                    {% else %}
+                    {{ log.event_type|title }}
+                    {% endif %}
+                </td>
+                <td style="padding: var(--bx-spacing-sm);">
+                    <div style="font-weight: 500;">{{ log.entity_type }}</div>
+                </td>
+                <td style="padding: var(--bx-spacing-sm);">{{ log.summary|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: var(--bx-spacing-lg); text-align: center; color: var(--bx-color-text-muted);">
+                    No activity recorded.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

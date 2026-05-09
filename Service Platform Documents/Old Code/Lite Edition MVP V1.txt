@@ -1,0 +1,423 @@
+# BrixaWares SaaS  
+# Lite Edition – MVP V1 Specification (Locked Draft)
+
+---
+
+# 1. Product Identity
+
+## Target Market
+General service businesses:
+- HVAC
+- Plumbing
+- Electrical
+- Repair/service shops
+- 1–10 users
+
+## Core Promise
+Simple service execution with structured data that stays organized as the company grows.
+
+## Design Principles
+- Manual-first (no automation)
+- Operational simplicity
+- Structured long-term integrity
+- Transparent data ownership
+- Storage-controlled (not artificially crippled)
+- Competitive feature parity where required
+
+---
+
+# 2. Plan Limits (Lite)
+
+- Max Users: 10
+- Attachment Storage: 3GB
+- Storage Warnings:
+  - 70% notice
+  - 85% strong warning
+  - 100% block uploads only
+- CSV export allowed (all tables)
+- No API access
+- No SMS
+- No automation
+- No multi-location
+- No inventory automation
+
+## Add-Ons Available
+- +5GB storage
+- +10GB storage
+
+---
+
+# 3. Core Modules Included
+
+---
+
+# 3.1 Dashboard (Operational Overview)
+
+Not analytics-heavy.
+
+Displays:
+- Work Orders Today
+- Open Work Orders
+- Open Invoices
+- Overdue Invoices
+- Revenue This Month
+- Storage Usage Meter
+
+No charts required.
+
+---
+
+# 3.2 Companies
+
+## Capabilities
+- Create / Edit / Delete
+- Status lifecycle enforced
+- Linked to:
+  - Contacts
+  - Service Items
+  - Quotes
+  - Work Orders
+  - Invoices
+  - Notes
+  - Documents
+  - Tasks
+
+## Features
+- Search
+- Filters
+- List view
+- CSV export
+
+---
+
+# 3.3 People
+
+## Types
+- Contacts (linked to Company)
+- Employees (system users)
+
+## Capabilities
+- Create/Edit contacts
+- Assign Work Orders
+- Role-based access
+
+---
+
+# 3.4 Products & Services (Catalog Only)
+
+Lite is catalog-only.
+
+## Fields
+- Name
+- Type (Part / Service)
+- SKU
+- Unit Price
+- Unit Cost (optional)
+- Manual Quantity (informational only)
+- Active/Inactive
+
+## Not Included
+- Auto-decrement
+- Inventory movement
+- Adjustments
+- Transfers
+- Locations
+- Purchase Orders
+
+---
+
+# 3.5 Service Items (Customer Assets)
+
+Core differentiator.
+
+## Required Fields
+- Company (required)
+- Asset Name
+- Make/Model
+- Serial Number
+- Install Date
+- Warranty Start/End
+- Status (Active / Retired / Decommissioned)
+
+## Capabilities
+- View service history (Quotes, WOs, Invoices)
+- Attach documents
+- Add typed notes
+- CSV export
+
+No maintenance automation.
+
+---
+
+# 3.6 Quotes
+
+Required for competitive parity.
+
+## Relationships
+- Company (required)
+- Service Item (optional but encouraged)
+- Line items
+- Assigned user (optional)
+
+## Status Flow
+Draft → Sent → Accepted → Rejected → Expired → Converted
+
+## Capabilities
+- Create/Edit
+- Send (email or PDF)
+- Convert to Work Order
+- Convert to Invoice
+- Attach documents
+- Typed notes
+- CSV export
+
+## Not Included
+- E-signature
+- Approval workflows
+- Version history
+- Automation reminders
+- Advanced analytics
+
+---
+
+# 3.7 Work Orders
+
+Primary operational object.
+
+## Required Relationships
+- Company (required)
+- Service Item (required)
+- Assigned User
+- Line items
+
+## Status Flow
+Draft → Scheduled → In Progress → On Hold → Completed → Closed / Cancelled
+
+## Capabilities
+- Create/Edit
+- Schedule date/time (set inside WO)
+- Calendar reflects scheduled items
+- Add parts/labor
+- Convert to Invoice
+- Attach documents
+- Typed notes
+- CSV export
+
+---
+
+# 3.8 Scheduling (Calendar View)
+
+- Calendar is display-based
+- Scheduling occurs inside Work Order
+- Drag-and-drop to reschedule
+- Filter by assigned user
+
+No dispatch board.
+No routing.
+No optimization.
+
+---
+
+# 3.9 Invoices
+
+## Relationships
+- Company (required)
+- Service Item (optional if standalone)
+- Line items
+- Payments (embedded)
+
+## Status Flow
+Draft → Issued → Partially Paid → Paid → Overdue → Void → Written Off
+
+## Capabilities
+- Create from Work Order
+- Standalone invoice
+- Email/send invoice
+- Print/PDF
+- Stripe payment link
+- CSV export
+
+---
+
+# 3.10 Payments (Embedded in Invoice)
+
+## Capabilities
+- Manual entry
+- Stripe processing
+- Partial payments
+- Status auto-update
+- Payment history per invoice
+
+No standalone payment module required.
+
+---
+
+# 3.11 Notes (Typed)
+
+No separate Interactions object.
+
+## Note Types
+- Internal Note
+- Call
+- Email
+- Site Visit
+- Customer Comment
+- Reminder
+
+Unlimited notes.
+Text does not count toward storage.
+
+---
+
+# 3.12 Documents (Attachments)
+
+- Max 10 attachments per record
+- Counts toward 3GB storage
+- Attach to:
+  - Company
+  - Service Item
+  - Quote
+  - Work Order
+  - Invoice
+
+Uploads blocked at 100% storage.
+
+---
+
+# 3.13 Tasks (Basic)
+
+- Create/Edit
+- Assign to user
+- Link to Company / Service Item / Quote / Work Order
+- Status tracking
+- CSV export
+
+No time tracking required.
+
+---
+
+# 3.14 Reporting (List-Based Only)
+
+List views + filters + search.
+
+## Companies
+- Active
+- Inactive
+- With Open Work Orders
+- With Outstanding Balance
+
+## Service Items
+- By Company
+- By Status
+
+## Quotes
+- Open Quotes
+- Quotes by Customer
+- Expired Quotes
+
+## Work Orders
+- Open
+- By Status
+- By User
+- Completed (date range)
+
+## Invoices
+- Open
+- Overdue
+- By Customer
+- By Date Range
+
+## Payments
+- By Date Range
+- By Invoice
+
+CSV export only.
+
+---
+
+# 4. Data Ownership & Export Policy
+
+All Paid Tiers:
+- Unlimited CSV export per table
+- No restore capability
+
+Lite:
+- CSV export only
+
+Structured Account Export reserved for Plus/Pro.
+
+---
+
+# 5. Storage Policy
+
+- 3GB included
+- Meter visible in Settings
+- Uploads blocked at 100%
+- Add-on storage available
+- Text records not counted
+
+---
+
+# 6. Security & Audit (Lite)
+
+Event-level logging:
+- CREATE
+- DELETE
+- STATUS_CHANGE
+- Financial events
+
+No field-level diffs.
+
+Sessions logged.
+
+---
+
+# 7. Roles
+
+- Admin
+- User
+- Read Only
+
+Permission enforcement required.
+
+---
+
+# 8. Explicitly Out of Scope (Lite)
+
+- Automation
+- Recurring schedules
+- Inventory movement
+- Purchase Orders
+- Receiving
+- Multi-location
+- API access
+- SMS
+- Advanced dashboards
+- Document version control
+- Compliance enforcement
+- Cold archive
+- Full structured export
+- Restore capability
+
+---
+
+# 9. MVP Completion Criteria
+
+Lite is complete when:
+
+1. End-to-end workflow functions:
+   Company → Service Item → Quote → Work Order → Invoice → Payment
+
+2. Storage cap operates correctly.
+
+3. CSV export works from all major list views.
+
+4. Roles enforce access properly.
+
+5. No raw DB backup/restore exists in SaaS.
+
+6. System is demo-ready without manual data intervention.
+
+---
+
+**End of Lite V1 Specification**

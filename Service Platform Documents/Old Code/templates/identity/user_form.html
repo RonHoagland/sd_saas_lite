@@ -1,0 +1,160 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}{% if is_edit %}Edit User{% else %}Create User{% endif %} - BrixaWares{% endblock %}
+{% block page_title %}{% if is_edit %}Edit User: {{ form.instance.username }}{% else %}Create New User{% endif %}{% endblock %}
+
+{% block main_content %}
+<div class="card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border); max-width: 800px;">
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: var(--bx-spacing-xl);">
+            <h3 style="margin-bottom: var(--bx-spacing-md); border-bottom: 1px solid var(--bx-color-border); padding-bottom: var(--bx-spacing-sm);">Account Information</h3>
+            
+            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--bx-spacing-md);">
+                <div class="form-group" style="grid-column: 1 / -1; margin-bottom: var(--bx-spacing-sm);">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--bx-spacing-md); background: var(--bx-color-bg-surface); padding: var(--bx-spacing-sm); border: 1px solid var(--bx-color-border); border-radius: 4px;">
+                         <div class="form-group">
+                            <label for="{{ user_form.password.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password</label>
+                            {{ user_form.password }}
+                             {% if user_form.password.help_text %}
+                            <small style="color: var(--bx-color-text-muted);">{{ user_form.password.help_text }}</small>
+                            {% endif %}
+                        </div>
+                         <div class="form-group">
+                            <label for="{{ user_form.password_confirm.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Confirm Password</label>
+                            {{ user_form.password_confirm }}
+                             {% if user_form.password_confirm.errors %}
+                            <small style="color: var(--bx-color-danger);">{{ user_form.password_confirm.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ user_form.username.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Username*</label>
+                    {{ user_form.username }}
+                    {% if user_form.username.errors %}
+                    <small style="color: var(--bx-color-danger);">{{ user_form.username.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ user_form.email.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email</label>
+                    {{ user_form.email }}
+                    {% if user_form.email.errors %}
+                    <small style="color: var(--bx-color-danger);">{{ user_form.email.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ user_form.first_name.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">First Name</label>
+                    {{ user_form.first_name }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ user_form.last_name.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Last Name</label>
+                    {{ user_form.last_name }}
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: var(--bx-spacing-md);">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    {{ user_form.is_active }}
+                    <span>Active Account</span>
+                </label>
+                <small style="color: var(--bx-color-text-muted); display: block; margin-top: 0.25rem;">Inactive users cannot log in.</small>
+            </div>
+            
+            {% if not is_edit %}
+            <div style="margin-top: var(--bx-spacing-md); padding: var(--bx-spacing-md); background-color: var(--bx-color-bg-body); border-radius: 4px;">
+                <p style="margin: 0; font-size: 0.9em;"><strong>Note:</strong> A temporary password will be simpler to set later. For now, the user will be created without an explicit password set here (or you can implement password setting logic).</p>
+                <p style="margin: 0; font-size: 0.9em; margin-top: 0.5rem;"><em>Implementation Note: Standard practice creates user with unusable password or sends reset email. For this app, you might want to set a default or add password fields.</em></p>
+            </div>
+            {% endif %}
+            
+            <div class="form-group" style="margin-top: var(--bx-spacing-md);">
+                <label for="{{ user_form.role.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Role</label>
+                {{ user_form.role }}
+                {% if user_form.role.help_text %}
+                <small style="color: var(--bx-color-text-muted); display: block; margin-top: 0.25rem;">{{ user_form.role.help_text }}</small>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="margin-bottom: var(--bx-spacing-xl);">
+            <h3 style="margin-bottom: var(--bx-spacing-md); border-bottom: 1px solid var(--bx-color-border); padding-bottom: var(--bx-spacing-sm);">Profile Details</h3>
+            
+            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--bx-spacing-md);">
+                <div class="form-group">
+                    <label for="{{ profile_form.display_name.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Display Name</label>
+                    {{ profile_form.display_name }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ profile_form.position.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Position / Title</label>
+                    {{ profile_form.position }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ profile_form.phone_number.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Phone Number</label>
+                    {{ profile_form.phone_number }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ profile_form.gender.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Gender</label>
+                    {{ profile_form.gender }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ profile_form.birthday.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Birthday</label>
+                    {{ profile_form.birthday }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ profile_form.date_left.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Date Left</label>
+                    {{ profile_form.date_left }}
+                </div>
+            </div>
+            
+             <div class="form-group" style="margin-top: var(--bx-spacing-md);">
+                <label for="{{ profile_form.time_zone.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Time Zone</label>
+                {{ profile_form.time_zone }}
+            </div>
+
+            <div class="form-group" style="margin-top: var(--bx-spacing-md);">
+                <label for="{{ profile_form.notes.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Notes</label>
+                {{ profile_form.notes }}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: var(--bx-spacing-md); margin-top: var(--bx-spacing-lg);">
+            <button type="submit" style="background: var(--bx-color-primary); color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                {% if is_edit %}Save Changes{% else %}Create User{% endif %}
+            </button>
+            <a href="{% if is_edit %}{% url 'user_detail' pk=form.instance.pk %}{% else %}{% url 'user_list' %}{% endif %}" style="padding: 0.75rem 1.5rem; border: 1px solid var(--bx-color-border); border-radius: 4px; background: white; text-decoration: none; color: var(--bx-color-text);">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-control, .form-select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--bx-color-border);
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    .form-control:focus, .form-select:focus {
+        outline: 2px solid var(--bx-color-primary);
+        border-color: transparent;
+    }
+    .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+</style>
+{% endblock %}

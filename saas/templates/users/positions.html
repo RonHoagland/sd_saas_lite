@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% comment %}
+  Admin scaffolding — Positions list + add form.
+  Phase 8 may consolidate this under Company Settings.
+{% endcomment %}
+
+{% block title %}Positions · ServizDesk Lite{% endblock %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'tenant-preferences' %}">Settings</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">Positions</span>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4" style="max-width:1200px;">
+
+  <div class="d-flex align-items-center gap-2 mb-4">
+    <a href="{% url 'tenant-preferences' %}" class="sd-util-btn" title="Back" aria-label="Back">
+      <i data-lucide="arrow-left"></i>
+    </a>
+    <h1 class="h4 fw-semibold text-body-emphasis mb-0">Positions</h1>
+  </div>
+
+  {% if not departments %}
+    <div class="alert alert-warning py-2 px-3 small" role="alert">
+      You need at least one
+      <a href="{% url 'departments' %}" class="alert-link">Department</a>
+      before adding positions.
+    </div>
+  {% endif %}
+
+  {% for msg in messages %}
+    <div class="alert {% if msg.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} py-2 px-3 small" role="alert">{{ msg }}</div>
+  {% endfor %}
+
+  <div class="row g-3">
+
+    {# List #}
+    <div class="col-12 col-lg-8">
+      <div class="sd-section-card overflow-hidden">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+              <tr>
+                <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Title</th>
+                <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Department</th>
+                <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for pos in positions %}
+              <tr>
+                <td class="text-body-emphasis">{{ pos.title }}</td>
+                <td class="text-body-secondary">{{ pos.department.name }}</td>
+                <td>
+                  {% if pos.status == "Active" %}
+                    <span class="badge bg-success-subtle text-success-emphasis">Active</span>
+                  {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ pos.status }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" class="text-center text-body-secondary py-5">No positions yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {# Add form #}
+    <div class="col-12 col-lg-4">
+      <div class="sd-section-card p-4">
+        <h2 class="h6 fw-semibold text-body-secondary mb-3">Add Position</h2>
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label small fw-medium text-body-secondary" for="pos_title">Title</label>
+            <input id="pos_title" name="title" class="form-control" type="text" placeholder="e.g. Field Technician" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-medium text-body-secondary" for="pos_dept">Department</label>
+            <select id="pos_dept" name="department" class="form-select">
+              <option value="">— Select —</option>
+              {% for dept in departments %}
+                <option value="{{ dept.pk }}">{{ dept.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm w-100" {% if not departments %}disabled{% endif %}>
+            Add Position
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

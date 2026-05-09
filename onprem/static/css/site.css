@@ -1,0 +1,277 @@
+/* ServizDesk Lite — site.css
+ *
+ * Brand-specific overrides layered on top of Bootstrap 5.3.
+ * Keep this file small and focused: only styles that Bootstrap doesn't
+ * ship out of the box (dark sidebar, stat cards, inline-edit pattern,
+ * drawer wrapper, print rules).
+ *
+ * Bootstrap is loaded first (see base.html); this file wins via source order.
+ */
+
+:root {
+  --sd-brand-primary: #2563eb;
+  --sd-brand-primary-hover: #1d4ed8;
+  --sd-sidebar-bg: #0f172a;
+  --sd-sidebar-border: #1e293b;
+  --sd-sidebar-text: #cbd5e1;
+  --sd-sidebar-text-muted: #94a3b8;
+  --sd-sidebar-hover-bg: #1e293b;
+  --sd-sidebar-active-bg: #2563eb;
+  --sd-sidebar-active-text: #ffffff;
+  --sd-topbar-border: #d6dde6;
+  /* Body background: slate-200. White section-cards (with slate-300 borders)
+   * pop clearly off the canvas. Step back to #e9eef3 (between slate-100 and
+   * slate-200) if this feels heavy; lighten further to #f1f5f9 / #f8fafc to
+   * undo. */
+  --sd-body-bg: #e2e8f0;
+  /* Card / input borders: slate-300. One step darker than the previous
+   * slate-200 (#e2e8f0) for crisper definition. Dial to #d6dde6 if too
+   * heavy, or #b6c2d2 for more weight. */
+  --sd-card-border: #cbd5e1;
+}
+
+/* Bootstrap border-color override — covers form-control, form-select,
+ * table cells, list-group-item, etc. so all bordered surfaces share the
+ * same definition as our section cards. */
+:root, body {
+  --bs-border-color: #cbd5e1;
+  --bs-border-color-translucent: rgba(15, 23, 42, 0.18);
+}
+
+/* Bootstrap primary overrides — keep ServizDesk blue consistent */
+.btn-primary {
+  --bs-btn-bg: var(--sd-brand-primary);
+  --bs-btn-border-color: var(--sd-brand-primary);
+  --bs-btn-hover-bg: var(--sd-brand-primary-hover);
+  --bs-btn-hover-border-color: var(--sd-brand-primary-hover);
+  --bs-btn-active-bg: var(--sd-brand-primary-hover);
+  --bs-btn-active-border-color: var(--sd-brand-primary-hover);
+}
+.text-brand { color: var(--sd-brand-primary) !important; }
+.bg-brand { background-color: var(--sd-brand-primary) !important; }
+.link-brand { color: var(--sd-brand-primary); }
+.link-brand:hover { color: var(--sd-brand-primary-hover); }
+
+/* Body + app shell */
+body {
+  background: var(--sd-body-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.sd-app-shell { display: flex; height: 100vh; overflow: hidden; }
+.sd-right-pane { display: flex; flex-direction: column; flex: 1 1 auto; overflow: hidden; }
+.sd-main { flex: 1 1 auto; overflow-y: auto; }
+
+/* Sidebar (Bootstrap doesn't ship a dark nav; build it here) */
+.sd-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--sd-sidebar-bg);
+  color: var(--sd-sidebar-text);
+  display: flex;
+  flex-direction: column;
+}
+.sd-sidebar-brand {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--sd-sidebar-border);
+  flex-shrink: 0;
+}
+.sd-sidebar-brand-mark {
+  height: 32px; width: 32px;
+  border-radius: 6px;
+  background: var(--sd-brand-primary);
+  color: #fff;
+  font-weight: 700; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+.sd-sidebar-brand-name { color: #fff; font-weight: 600; font-size: 15px; }
+.sd-sidebar-tier-badge {
+  margin-left: auto;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--sd-sidebar-text-muted);
+}
+.sd-sidebar-nav { flex: 1 1 auto; overflow-y: auto; padding: 12px 8px; }
+.sd-sidebar-footer {
+  border-top: 1px solid var(--sd-sidebar-border);
+  padding: 8px;
+  flex-shrink: 0;
+}
+.sd-sidebar-section-label {
+  color: var(--sd-sidebar-text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  padding: 10px 12px 4px;
+  margin: 0;
+}
+.sd-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  font-size: 13.5px;
+  color: var(--sd-sidebar-text);
+  border-radius: 6px;
+  text-decoration: none;
+}
+.sd-nav-item:hover { background: var(--sd-sidebar-hover-bg); color: #fff; }
+.sd-nav-item.active { background: var(--sd-sidebar-active-bg); color: var(--sd-sidebar-active-text); font-weight: 500; }
+.sd-nav-item [data-lucide] { width: 18px; height: 18px; stroke-width: 1.75; flex-shrink: 0; }
+.sd-sidebar-divider { height: 1px; background: var(--sd-sidebar-border); margin: 8px 4px; }
+.sd-sidebar-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--sd-sidebar-border);
+  margin-top: 4px;
+}
+.sd-sidebar-user-avatar {
+  height: 32px; width: 32px;
+  border-radius: 50%;
+  background: var(--sd-brand-primary);
+  color: #fff; font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.sd-sidebar-user-name { color: #fff; font-size: 14px; font-weight: 500; }
+.sd-sidebar-user-role { color: var(--sd-sidebar-text-muted); font-size: 11px; }
+
+/* Topbar */
+.sd-topbar {
+  height: 56px;
+  border-bottom: 1px solid var(--sd-topbar-border);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.sd-topbar-tenant { color: #0f172a; font-weight: 600; font-size: 15px; }
+.sd-topbar-breadcrumb {
+  color: #64748b; font-size: 14px;
+  display: flex; align-items: center; gap: 6px;
+}
+.sd-topbar-breadcrumb a { color: #64748b; text-decoration: none; }
+.sd-topbar-breadcrumb a:hover { color: #334155; }
+.sd-topbar-breadcrumb .sep { color: #cbd5e1; }
+.sd-topbar-search {
+  position: relative;
+  margin-right: 4px;
+}
+.sd-topbar-search input {
+  width: 256px;
+  height: 36px;
+  padding: 0 12px 0 34px;
+  border: 1px solid var(--sd-topbar-border);
+  border-radius: 6px;
+  background: var(--sd-body-bg);
+  font-size: 14px;
+}
+.sd-topbar-search input:focus {
+  outline: none;
+  border-color: var(--sd-brand-primary);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.sd-topbar-search [data-lucide] {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: #94a3b8;
+}
+.sd-util-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 6px;
+  color: #475569;
+  background: transparent;
+  border: none;
+  text-decoration: none;
+  position: relative;
+}
+.sd-util-btn:hover { background: #f1f5f9; color: #0f172a; }
+.sd-util-btn [data-lucide] { width: 18px; height: 18px; stroke-width: 1.75; }
+.sd-util-btn-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+/* Stat cards (dashboard + list page strip) */
+.sd-stat-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--sd-card-border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  overflow: hidden;
+}
+.sd-stat-card::before {
+  content: "";
+  position: absolute; left: 0; top: 0; right: 0;
+  height: 3px;
+  background: var(--sd-stat-accent, var(--sd-brand-primary));
+}
+.sd-stat-card-label {
+  display: flex; align-items: center; gap: 8px;
+  color: #475569;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.sd-stat-card-label [data-lucide] {
+  width: 16px; height: 16px; stroke-width: 1.75;
+}
+.sd-stat-card-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.2;
+}
+.sd-stat-card-sub {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* Section card (used for detail-page cards and inline-edit pattern) */
+.sd-section-card {
+  background: #fff;
+  border: 1px solid var(--sd-card-border);
+  border-radius: 10px;
+}
+.sd-section-card.editable { position: relative; transition: box-shadow 0.18s, border-color 0.18s; }
+.sd-section-card.editing {
+  box-shadow: 0 0 0 2px var(--sd-brand-primary), 0 4px 16px rgba(37, 99, 235, 0.1);
+  border-color: var(--sd-brand-primary);
+}
+.sd-section-pencil {
+  position: absolute; top: 14px; right: 14px;
+  width: 30px; height: 30px;
+  border-radius: 6px;
+  color: #64748b;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  z-index: 1;
+}
+.sd-section-pencil:hover { background: #f1f5f9; color: #0f172a; border-color: var(--sd-card-border); }
+.sd-section-card.editing .sd-section-pencil { display: none; }
+.sd-section-card .edit-mode { display: none; }
+.sd-section-card.editing .view-mode { display: none; }
+.sd-section-card.editing .edit-mode { display: block; }
+
+/* Drawer (thin wrapper around Bootstrap offcanvas — 560px wide on the right) */
+#sd-drawer { width: 560px; max-width: 92vw; }
+#sd-drawer .offcanvas-body { background: var(--sd-body-bg); }
+
+/* Print rules — strip app chrome when the user prints a Quote/Invoice.
+ * Expand these as print layouts mature (Phase 5/6). */
+@media print {
+  .sd-sidebar, .sd-topbar, #sd-drawer, .sd-no-print { display: none !important; }
+  .sd-main { overflow: visible !important; }
+  body { background: #fff !important; }
+}

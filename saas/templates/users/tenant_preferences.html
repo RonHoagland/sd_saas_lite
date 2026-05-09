@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% comment %}
+  Company Settings page (Lite spec §27).
+  Note: this is the legacy admin scaffolding; Phase 8.2 (Company Settings)
+  builds the spec-aligned UI. For now, this is a Bootstrap conversion of
+  the existing form so it renders cleanly while we get there.
+  Per LITE_DECISIONS.md §B, numbering prefix fields are NOT exposed here
+  in Lite — those are Plus+ features.
+{% endcomment %}
+
+{% block title %}Company Settings · ServizDesk Lite{% endblock %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">Company Settings</span>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4" style="max-width:1200px;">
+
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="h4 fw-semibold text-body-emphasis mb-0">Company Settings</h1>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-success py-2 px-3 small" role="alert">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    {# ─── Company Information ──────────────────────────────────────────── #}
+    <div class="sd-section-card p-4 mb-3">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Company Information</h2>
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label small fw-medium text-body-secondary" for="f_company_name">Company Name</label>
+          <input id="f_company_name" name="company_name" value="{{ prefs.company_name }}" class="form-control" type="text" />
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-medium text-body-secondary" for="f_address">Address</label>
+          <input id="f_address" name="address" value="{{ prefs.address }}" class="form-control" type="text" />
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-medium text-body-secondary" for="f_city">City</label>
+          <input id="f_city" name="city" value="{{ prefs.city }}" class="form-control" type="text" />
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-medium text-body-secondary" for="f_state">State / Province</label>
+          <input id="f_state" name="state" value="{{ prefs.state }}" class="form-control" type="text" />
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-medium text-body-secondary" for="f_zip">ZIP / Postal Code</label>
+          <input id="f_zip" name="zip" value="{{ prefs.zip }}" class="form-control" type="text" />
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-medium text-body-secondary" for="f_country">Country</label>
+          <input id="f_country" name="country" value="{{ prefs.country }}" class="form-control" type="text" />
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-medium text-body-secondary" for="f_phone">Phone</label>
+          <input id="f_phone" name="phone" value="{{ prefs.phone }}" class="form-control" type="text" />
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-medium text-body-secondary" for="f_fax">Fax</label>
+          <input id="f_fax" name="fax" value="{{ prefs.fax }}" class="form-control" type="text" />
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-medium text-body-secondary" for="f_email">Email</label>
+          <input id="f_email" name="email" value="{{ prefs.email }}" class="form-control" type="email" />
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-medium text-body-secondary" for="f_website">Website</label>
+          <input id="f_website" name="website" value="{{ prefs.website }}" class="form-control" type="url" />
+        </div>
+      </div>
+    </div>
+
+    {# ─── Locale & Formatting ──────────────────────────────────────────── #}
+    <div class="sd-section-card p-4 mb-3">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Locale &amp; Formatting</h2>
+      <div class="row g-3">
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-medium text-body-secondary" for="f_timezone">Timezone</label>
+          <input id="f_timezone" name="timezone" value="{{ prefs.timezone }}" class="form-control" type="text" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-medium text-body-secondary" for="f_date_format">Date Format</label>
+          <select id="f_date_format" name="date_format" class="form-select">
+            <option value="MM/DD/YYYY" {% if prefs.date_format == "MM/DD/YYYY" %}selected{% endif %}>MM/DD/YYYY</option>
+            <option value="DD/MM/YYYY" {% if prefs.date_format == "DD/MM/YYYY" %}selected{% endif %}>DD/MM/YYYY</option>
+            <option value="YYYY-MM-DD" {% if prefs.date_format == "YYYY-MM-DD" %}selected{% endif %}>YYYY-MM-DD</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-medium text-body-secondary" for="f_phone_cc">Phone Country Code</label>
+          <input id="f_phone_cc" name="phone_country_code" value="{{ prefs.phone_country_code }}" class="form-control" type="text" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-medium text-body-secondary" for="f_currency">Currency</label>
+          <input id="f_currency" name="default_currency" value="{{ prefs.default_currency }}" class="form-control" maxlength="3" type="text" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-medium text-body-secondary" for="f_currency_sym">Currency Symbol</label>
+          <input id="f_currency_sym" name="currency_symbol" value="{{ prefs.currency_symbol }}" class="form-control" maxlength="5" type="text" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-medium text-body-secondary" for="f_decimal">Decimal Precision</label>
+          <input id="f_decimal" name="decimal_precision" value="{{ prefs.decimal_precision }}" class="form-control" type="number" min="0" max="4" />
+        </div>
+      </div>
+    </div>
+
+    {# ─── Financials ──────────────────────────────────────────────────── #}
+    <div class="sd-section-card p-4 mb-3">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Financials</h2>
+      <div class="row g-3">
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-medium text-body-secondary" for="f_tax_rate">Default Tax Rate (%)</label>
+          <input id="f_tax_rate" name="default_tax_rate" value="{{ prefs.default_tax_rate }}" class="form-control" type="number" step="0.0001" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-medium text-body-secondary" for="f_tax_label">Tax Label</label>
+          <input id="f_tax_label" name="tax_label" value="{{ prefs.tax_label }}" class="form-control" type="text" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-medium text-body-secondary" for="f_terms">Default Payment Terms</label>
+          <select id="f_terms" name="default_payment_terms" class="form-select">
+            {% for val, label in prefs.PaymentTermsChoices.choices %}
+              <option value="{{ val }}" {% if prefs.default_payment_terms == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-medium text-body-secondary" for="f_quote_exp">Quote Expiration Days</label>
+          <input id="f_quote_exp" name="default_quote_expiration_days" value="{{ prefs.default_quote_expiration_days }}" class="form-control" type="number" min="1" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-medium text-body-secondary" for="f_fiscal">Fiscal Year Start Month</label>
+          <input id="f_fiscal" name="fiscal_year_start_month" value="{{ prefs.fiscal_year_start_month }}" class="form-control" type="number" min="1" max="12" />
+        </div>
+      </div>
+    </div>
+
+    {# ─── Security ────────────────────────────────────────────────────── #}
+    <div class="sd-section-card p-4 mb-3">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Security</h2>
+      <div class="row g-3 align-items-center">
+        <div class="col-12 col-md-6">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="mfa_required" name="mfa_required" {% if prefs.mfa_required %}checked{% endif %} />
+            <label class="form-check-label small" for="mfa_required">Require MFA for all users</label>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-medium text-body-secondary" for="f_session">Session Timeout (minutes)</label>
+          <input id="f_session" name="session_timeout_minutes" value="{{ prefs.session_timeout_minutes }}" class="form-control" type="number" min="5" />
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mb-4">
+      <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+      <button type="submit" class="btn btn-primary btn-sm">Save Preferences</button>
+    </div>
+  </form>
+
+  {# ─── Organisation quick links ───────────────────────────────────────── #}
+  <div class="sd-section-card p-4">
+    <h2 class="h6 fw-semibold text-body-secondary mb-3">Organisation</h2>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'employees' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+        <i data-lucide="user-cog"></i> Users
+      </a>
+      <a href="{% url 'departments' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+        <i data-lucide="building-2"></i> Departments
+      </a>
+      <a href="{% url 'positions' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+        <i data-lucide="briefcase"></i> Positions
+      </a>
+      <a href="{% url 'roles' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+        <i data-lucide="shield-check"></i> Roles
+      </a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

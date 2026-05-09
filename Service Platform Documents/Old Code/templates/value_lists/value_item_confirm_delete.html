@@ -1,0 +1,22 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}Delete Item{% endblock %}
+{% block page_title %}Delete Option{% endblock %}
+
+{% block main_content %}
+<div style="max-width: 600px; margin: 0 auto; padding-top: 40px;">
+    <div class="card" style="background: white; padding: var(--bx-spacing-xl); border-radius: 8px; border: 1px solid var(--bx-color-border); text-align: center;">
+        <h2 style="color: var(--bx-color-danger); margin-top: 0;">Confirm Deletion</h2>
+        <p>Are you sure you want to delete the option <strong>"{{ object.value }}"</strong> from propery list <strong>{{ object.value_list.name }}</strong>?</p>
+        <p style="color: var(--bx-color-text-muted);">Existing records using this value will keep the text "<strong>{{ object.value }}</strong>", but it will no longer appear in the dropdown choice list.</p>
+        
+        <form method="post" style="margin-top: 32px; display: flex; justify-content: center; gap: 16px;">
+            {% csrf_token %}
+            <a href="{% url 'value_list_detail' object.value_list.slug %}" class="btn" style="padding: 10px 24px; border: 1px solid var(--bx-color-border); border-radius: 4px; text-decoration: none; color: var(--bx-color-text);">Cancel</a>
+            <button type="submit" class="btn" style="background: var(--bx-color-danger); color: white; padding: 10px 24px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                Delete Option
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

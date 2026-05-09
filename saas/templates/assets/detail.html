@@ -1,0 +1,99 @@
+{% extends "_section_base.html" %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <a href="{% url 'assets' %}">Assets</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">{{ asset.name }}</span>
+{% endblock %}
+
+{% block section_subtitle %}
+  <p class="small text-body-secondary mb-0 mt-1">
+    Asset · {{ asset.asset_number|default:"unassigned #" }}
+  </p>
+{% endblock %}
+
+{% block section_actions %}
+  <a href="{% url 'assets' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+    <i data-lucide="arrow-left"></i> Back
+  </a>
+{% endblock %}
+
+{% block section_body %}
+<div class="row g-3">
+
+  <div class="col-12 col-lg-8">
+    <div class="sd-section-card p-4 mb-3">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Asset Information</h2>
+      <dl class="row g-3 mb-0 small">
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Name</dt>
+          <dd class="mb-0">{{ asset.name }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Asset #</dt>
+          <dd class="mb-0">{{ asset.asset_number|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Customer</dt>
+          <dd class="mb-0">
+            {% if asset.customer %}
+              <a href="{% url 'customer-detail' asset.customer.pk %}" class="link-brand text-decoration-none">{{ asset.customer }}</a>
+            {% else %}—{% endif %}
+          </dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Status</dt>
+          <dd class="mb-0">{{ asset.status }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="sd-section-card p-4">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Equipment Details</h2>
+      <dl class="row g-3 mb-0 small">
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Manufacturer</dt>
+          <dd class="mb-0">{{ asset.manufacturer|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Model</dt>
+          <dd class="mb-0">{{ asset.model_number|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Serial Number</dt>
+          <dd class="mb-0">{{ asset.serial_number|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Install Date</dt>
+          <dd class="mb-0">{{ asset.install_date|date:"M j, Y"|default:"—" }}</dd>
+        </div>
+        <div class="col-12 col-md-6">
+          <dt class="form-label small fw-medium text-body-secondary mb-1">Warranty Expiration</dt>
+          <dd class="mb-0">{{ asset.warranty_expiration|date:"M j, Y"|default:"—" }}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="sd-section-card p-4 mb-3">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Service History</h2>
+      <div class="small text-body-secondary">
+        Linked Jobs / Service Requests / Quotes / Invoices wired in Phase 3.2.
+      </div>
+    </div>
+
+    <div class="sd-section-card p-4">
+      <h2 class="h6 fw-semibold text-body-secondary mb-3">Record Info</h2>
+      <div class="small text-body-secondary">
+        <div>Created {{ asset.created_on|date:"M j, Y" }} by {{ asset.created_by|default:"system" }}</div>
+        <div>Updated {{ asset.updated_on|date:"M j, Y" }} by {{ asset.updated_by|default:"system" }}</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

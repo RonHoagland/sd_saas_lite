@@ -1,0 +1,61 @@
+{% extends "_section_base.html" %}
+
+{% block breadcrumb %}
+  <span class="sep">/</span>
+  <a href="{% url 'home' %}">Home</a>
+  <span class="sep">/</span>
+  <span class="fw-medium text-body-emphasis">Customers</span>
+{% endblock %}
+
+{% block section_actions %}
+  <a href="#" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+    <i data-lucide="plus"></i> New Customer
+  </a>
+{% endblock %}
+
+{% block section_body %}
+<div class="sd-section-card overflow-hidden">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">#</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Name</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Type</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Status</th>
+          <th class="text-uppercase text-body-secondary" style="font-size:11px;letter-spacing:0.04em;">Customer Since</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td class="text-body-secondary">{{ c.customer_number|default:"—" }}</td>
+          <td>
+            <a href="{% url 'customer-detail' c.pk %}" class="link-brand text-decoration-none fw-medium">
+              {{ c.company_name|default:"(unnamed)" }}
+            </a>
+          </td>
+          <td class="text-body-secondary">{{ c.account_type }}</td>
+          <td>
+            {% if c.status == 'Active' %}
+              <span class="badge bg-success-subtle text-success-emphasis">Active</span>
+            {% elif c.status == 'Hold' %}
+              <span class="badge bg-warning-subtle text-warning-emphasis">Hold</span>
+            {% else %}
+              <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ c.status }}</span>
+            {% endif %}
+          </td>
+          <td class="text-body-secondary">{{ c.customer_since|date:"M j, Y"|default:"—" }}</td>
+          <td class="text-end">
+            <a href="{% url 'customer-detail' c.pk %}" class="link-brand text-decoration-none small">View</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-body-secondary py-5">No customers yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}Roles - BrixaWares{% endblock %}
+{% block page_title %}Role Management{% endblock %}
+
+{% block main_content %}
+<div class="card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border);">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--bx-spacing-lg);">
+        <p style="color: var(--bx-color-text-muted);">Manage system roles and permissions.</p>
+        <p style="color: var(--bx-color-text-muted);">Manage system roles and permissions.</p>
+    </div>
+
+
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid var(--bx-color-border); text-align: left;">
+                <th style="padding: var(--bx-spacing-sm);">Name</th>
+                <th style="padding: var(--bx-spacing-sm);">Description</th>
+                <th style="padding: var(--bx-spacing-sm);">Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in roles %}
+            <tr style="border-bottom: 1px solid var(--bx-color-border);">
+                <td style="padding: var(--bx-spacing-sm); font-weight: 500;">{{ r.name }}</td>
+                <td style="padding: var(--bx-spacing-sm);">{{ r.description }}</td>
+                <td style="padding: var(--bx-spacing-sm);">
+                    {% if r.is_system %}
+                    <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 99px; font-size: 0.8em;">System</span>
+                    {% else %}
+                    <span style="background: #f3f4f6; color: #4b5563; padding: 2px 8px; border-radius: 99px; font-size: 0.8em;">Custom</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}Administration - BrixaWares{% endblock %}
+{% block page_title %}Administration Area{% endblock %}
+
+{% block main_content %}
+<div class="admin-grid" style="display: items; gap: var(--bx-spacing-xl);">
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--bx-spacing-lg);">
+        
+        <!-- User Management -->
+        <a href="{% url 'user_list' %}" class="card admin-card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border); display: block; transition: transform 0.2s;">
+            <h3 style="margin-bottom: var(--bx-spacing-sm); color: var(--bx-color-primary);">Users</h3>
+            <p style="color: var(--bx-color-text-muted); font-size: var(--bx-font-size-sm);">Manage system users and access roles.</p>
+        </a>
+
+        <!-- Roles -->
+        <a href="{% url 'role_list' %}" class="card admin-card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border); display: block; transition: transform 0.2s;">
+            <h3 style="margin-bottom: var(--bx-spacing-sm); color: var(--bx-color-primary);">Roles</h3>
+            <p style="color: var(--bx-color-text-muted); font-size: var(--bx-font-size-sm);">Define and manage system permission roles.</p>
+        </a>
+
+        <!-- Preferences -->
+        <a href="{% url 'preference_list' %}" class="card admin-card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border); display: block; transition: transform 0.2s;">
+            <h3 style="margin-bottom: var(--bx-spacing-sm); color: var(--bx-color-primary);">Preferences</h3>
+            <p style="color: var(--bx-color-text-muted); font-size: var(--bx-font-size-sm);">System-wide configuration settings.</p>
+        </a>
+
+        <!-- Value Lists -->
+        <a href="{% url 'value_list_list' %}" class="card admin-card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border); display: block; transition: transform 0.2s;">
+            <h3 style="margin-bottom: var(--bx-spacing-sm); color: var(--bx-color-primary);">Value Lists</h3>
+            <p style="color: var(--bx-color-text-muted); font-size: var(--bx-font-size-sm);">Manage dynamic dropdown options.</p>
+        </a>
+
+        <!-- Backups -->
+        <a href="{% url 'backup_dashboard' %}" class="card admin-card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border); display: block; transition: transform 0.2s;">
+            <h3 style="margin-bottom: var(--bx-spacing-sm); color: var(--bx-color-primary);">Backup & Restore</h3>
+            <p style="color: var(--bx-color-text-muted); font-size: var(--bx-font-size-sm);">Manage backups and recovery.</p>
+        </a>
+
+        <!-- Audit Logs -->
+        <a href="{% url 'audit_log' %}" class="card admin-card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border); display: block; transition: transform 0.2s;">
+            <h3 style="margin-bottom: var(--bx-spacing-sm); color: var(--bx-color-primary);">Audit Logs</h3>
+            <p style="color: var(--bx-color-text-muted); font-size: var(--bx-font-size-sm);">View system activity logs.</p>
+        </a>
+
+    </div>
+
+</div>
+
+<style>
+    .admin-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        border-color: var(--bx-color-primary);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+           
+        <!-- Logo Area -->
+        <div class="app-sidebar-logo">
+             {% if logo_url %}
+                <img src="{{ logo_url }}" alt="Company Logo">
+            {% else %}
+                <div class="app-sidebar-header">BrixaWares</div>
+            {% endif %}
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="app-nav">
+            <a href="{% url 'root' %}" class="nav-item">Dashboard</a>
+            <a href="{% url 'client_list' %}" class="nav-item">Clients</a>
+            <a href="{% url 'product_list' %}" class="nav-item active">Products</a>
+            <div class="nav-divider"></div>
+            <!-- Placeholders -->
+            <a href="#" class="nav-item" style="opacity: 0.5; cursor: not-allowed;">Quotes</a>
+            <a href="#" class="nav-item" style="opacity: 0.5; cursor: not-allowed;">Invoices</a>
+            <a href="#" class="nav-item" style="opacity: 0.5; cursor: not-allowed;">Work Orders</a>
+            <a href="#" class="nav-item" style="opacity: 0.5; cursor: not-allowed;">Payments</a>
+        </nav>
+
+        <!-- Record Actions (Sidebar Bottom) -->
+        <div style="padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto;">
+            <h3 style="font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Actions</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                {% block sidebar_actions %}
+                    <!-- Override in child templates -->
+                {% endblock %}
+            </div>
+        </div>
+    </aside>
+
+    <!-- Header -->
+    <header class="app-header">
+        
+        <div class="header-left">
+             <!-- Back Button -->
+             <a href="{% block back_url %}javascript:history.back(){% endblock %}" style="margin-right: 1rem; color: white; opacity: 0.8; text-decoration: none; display: flex; align-items: center;">
+                <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </a>
+            <h1 style="font-size: 1.5rem; font-weight: bold; color: white; margin: 0;">
+                {% block title %}Details{% endblock %}
+            </h1>
+        </div>
+
+        <!-- Top Right Controls -->
+        <div class="header-right">
+            <!-- Record Navigation -->
+            <div style="display: flex; align-items: center; background-color: rgba(255,255,255,0.2); border-radius: 4px; padding: 2px;">
+                {% if previous_object_url %}
+                    <a href="{{ previous_object_url }}" style="padding: 4px; color: white; display: flex; align-items: center;" title="Previous Record">
+                         <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </a>
+                {% else %}
+                    <span style="padding: 4px; color: rgba(255,255,255,0.4); cursor: not-allowed; display: flex; align-items: center;">
+                         <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </span>
+                {% endif %}
+                
+                {% if next_object_url %}
+                    <a href="{{ next_object_url }}" style="padding: 4px; color: white; display: flex; align-items: center;" title="Next Record">
+                        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                {% else %}
+                     <span style="padding: 4px; color: rgba(255,255,255,0.4); cursor: not-allowed; display: flex; align-items: center;">
+                        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </span>
+                {% endif %}
+            </div>
+            
+             <!-- User Profile -->
+             <a href="{% url 'my_profile' %}" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 8px; margin-left: 1rem;">
+                <span>{{ user.username }}</span>
+                <span style="font-size: 0.8em; opacity: 0.8;">(My Profile)</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Scrollable Content -->
+    <main class="app-content" style="background-color: var(--bx-color-bg-main); padding: 2rem;">
+        <div style="max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+            
+            <!-- Left Column: Details -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                {% block left_column %}
+                <!-- Main details go here -->
+                {% endblock %}
+            </div>
+
+            <!-- Right Column: Related Lists -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                {% block right_column %}
+                <!-- Related lists go here -->
+                {% endblock %}
+            </div>
+            
+        </div>
+    </main>
+</div>
+{% endblock %}

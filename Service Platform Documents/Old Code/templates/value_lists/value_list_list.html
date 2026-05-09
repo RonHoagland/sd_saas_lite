@@ -1,0 +1,48 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}Value Lists - BrixaWares{% endblock %}
+{% block page_title %}Value Lists{% endblock %}
+
+{% block main_content %}
+<div class="card" style="background: white; border-radius: 8px; border: 1px solid var(--bx-color-border); overflow: hidden;">
+    <div style="padding: var(--bx-spacing-lg); border-bottom: 1px solid var(--bx-color-border); display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-size: var(--bx-font-size-md); font-weight: 600; margin: 0;">System Lists</h2>
+        <a href="{% url 'value_list_create' %}" class="btn btn-primary" style="background: var(--bx-color-primary); color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: var(--bx-font-size-sm);">
+            + New List
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        {% if value_lists %}
+        <table style="width: 100%; border-collapse: collapse; font-size: var(--bx-font-size-sm);">
+            <thead style="background: var(--bx-color-bg-body); border-bottom: 1px solid var(--bx-color-border);">
+                <tr>
+                    <th style="padding: 12px 24px; text-align: left; color: var(--bx-color-text-muted); font-weight: 500;">Name</th>
+                    <th style="padding: 12px 24px; text-align: left; color: var(--bx-color-text-muted); font-weight: 500;">Description</th>
+                    <th style="padding: 12px 24px; text-align: right; color: var(--bx-color-text-muted); font-weight: 500;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for list in value_lists %}
+                <tr style="border-bottom: 1px solid var(--bx-color-border);">
+                    <td style="padding: 16px 24px;">
+                        <a href="{% url 'value_list_detail' list.slug %}" style="color: var(--bx-color-primary); text-decoration: none; font-weight: 500;">
+                            {{ list.name }}
+                        </a>
+                    </td>
+                    <td style="padding: 16px 24px; color: var(--bx-color-text-muted);">{{ list.description|truncatewords:10 }}</td>
+                    <td style="padding: 16px 24px; text-align: right;">
+                        <a href="{% url 'value_list_detail' list.slug %}" class="btn btn-sm" style="background: var(--bx-color-bg-body); border: 1px solid var(--bx-color-border); padding: 6px 12px; border-radius: 4px; color: var(--bx-color-text); text-decoration: none; font-size: 13px;">Manage Options</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 48px; text-align: center; color: var(--bx-color-text-muted);">
+            <p>No value lists defined yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

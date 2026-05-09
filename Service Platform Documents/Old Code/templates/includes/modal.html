@@ -1,0 +1,29 @@
+<div id="modal-container" 
+     class="modal-container hidden" 
+     style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50;">
+    <div id="modal-content" 
+         class="modal-content" 
+         style="background: white; padding: 2rem; border-radius: 8px; max-width: 500px; width: 100%;">
+        <!-- Modal content will be injected here via HTMX -->
+    </div>
+</div>
+
+<script>
+    // Simple script to handle modal visibility if needed specifically
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        if (evt.target.id === 'modal-content') {
+            document.getElementById('modal-container').classList.remove('hidden');
+        }
+    });
+
+    document.getElementById('modal-container').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.add('hidden');
+            document.getElementById('modal-content').innerHTML = ''; // Clear content
+        }
+    });
+</script>
+
+<style>
+    .hidden { display: none !important; }
+</style>

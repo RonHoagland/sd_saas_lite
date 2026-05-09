@@ -1,0 +1,30 @@
+{% extends "layouts/app_shell.html" %}
+
+{% block title %}Confirm Removal - BrixaWares{% endblock %}
+{% block page_title %}Confirm Role Removal{% endblock %}
+
+{% block main_content %}
+<div class="card" style="background: white; padding: var(--bx-spacing-lg); border-radius: 8px; border: 1px solid var(--bx-color-border); max-width: 600px; margin: 0 auto; margin-top: 40px;">
+    
+    <div style="text-align: center; margin-bottom: var(--bx-spacing-lg);">
+        <h2 style="color: var(--bx-color-danger); margin-bottom: 1rem;">Confirm Removal</h2>
+        <p style="font-size: 1.1em; color: var(--bx-color-text);">
+            Are you sure you want to remove the role 
+            <strong>{{ role.name }}</strong> 
+            from user 
+            <strong>{{ target_user.username }}</strong>?
+        </p>
+    </div>
+
+    <form method="post" style="display: flex; flex-direction: column; gap: 1rem; align-items: center;">
+        {% csrf_token %}
+        <button type="submit" style="background: var(--bx-color-danger); color: white; padding: 12px 24px; border: none; border-radius: 4px; font-size: 1.1em; cursor: pointer; font-weight: bold;">
+            Yes, Remove Role
+        </button>
+        
+        <a href="{% url 'user_detail' pk=target_user.id %}" style="color: var(--bx-color-text-muted); text-decoration: underline;">
+            Cancel and Go Back
+        </a>
+    </form>
+</div>
+{% endblock %}
