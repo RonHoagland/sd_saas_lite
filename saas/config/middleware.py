@@ -113,6 +113,9 @@ class AdminBypassMiddleware:
                 if not isinstance(user, StaffUser):
                     # Tenant user trying to access admin — flush session and
                     # redirect to admin login so they can use a system account.
+                    from users.session_audit import close_sdta_session_record
+
+                    close_sdta_session_record(request)
                     logout(request)
                     return redirect(f'{self.ADMIN_PREFIX}login/?next={request.path}')
         return self.get_response(request)

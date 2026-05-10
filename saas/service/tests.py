@@ -5,10 +5,36 @@ from decimal import Decimal
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from crm.models import Customer, Person
+from lifecycle.models import LifecycleStateDef, LifecycleTransitionRule
 from .models import Invoice, InvoiceLine, Quote, QuoteLine, Payments, ServiceRequest, WorkOrder
 from .services import convert_service_request_to_work_order, convert_quote_to_invoice
 
 User = get_user_model()
+
+
+def _seed_invoice_lifecycle(tenant_id):
+    states = [
+        ('Draft', 'normal'), ('Sent', 'normal'),
+        ('Partial', 'normal'), ('Paid', 'final'),
+        ('Overdue', 'normal'), ('Voided', 'final'),
+    ]
+    for name, st in states:
+        LifecycleStateDef.objects.create(
+            tenant_id=tenant_id, entity_type='invoice',
+            state_name=name, state_label=name, state_type=st,
+        )
+    transitions = [
+        ('Draft', 'Sent'),
+        ('Sent', 'Partial'), ('Sent', 'Paid'), ('Sent', 'Overdue'),
+        ('Partial', 'Paid'), ('Partial', 'Overdue'),
+        ('Overdue', 'Partial'), ('Overdue', 'Paid'),
+    ]
+    for from_s, to_s in transitions:
+        LifecycleTransitionRule.objects.create(
+            tenant_id=tenant_id, entity_type='invoice',
+            from_state=from_s, to_state=to_s, requires_reason=False,
+        )
+
 
 class ServiceBusinessLogicTest(TestCase):
     def setUp(self):
@@ -33,6 +59,7 @@ class ServiceBusinessLogicTest(TestCase):
             account_type='Commercial',
             created_by=self.user
         )
+        _seed_invoice_lifecycle(self.tenant_id)
 
     def test_invoice_calculations(self):
         """Verify that invoice totals are calculated correctly."""
@@ -79,7 +106,9 @@ class ServiceBusinessLogicTest(TestCase):
             unit_price=100.00
         )
         invoice.refresh_from_db()
-        
+        invoice.status = Invoice.StatusChoices.SENT
+        invoice.save(update_fields=['status'])
+
         # Apply partial payment
         Payments.objects.create(
             tenant_id=invoice.tenant_id,

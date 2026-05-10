@@ -358,7 +358,7 @@ class SessionLogSerializer(TenantModelSerializer):
         fields = TenantModelSerializer.Meta.fields + [
             'user',
             'user_display',
-            'session_id',
+            'tier_at_login',
             'login_at',
             'logout_at',
             'expiration_at',

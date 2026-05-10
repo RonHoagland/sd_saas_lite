@@ -7,6 +7,7 @@ from django.utils import timezone
 from infrastructure.models import TenantState
 from staff.models import StaffUser
 from users.models import User
+from users.session_audit import close_sdta_session_record, register_sdta_session_record
 from service.models import ServiceRequest, WorkOrder, Quote, Invoice
 
 # Generic login error — never disclose which field was wrong.
@@ -114,6 +115,7 @@ def splash_login_view(request):
             )
             request.session["active_tenant_id"] = str(tenant.id)
             request.session["active_tenant_subdomain"] = tenant.subdomain
+            register_sdta_session_record(request, tenant, tenant_user)
             return redirect(request.GET.get("next", "home"))
 
         # 3. Fall back to StaffUser. Accepts either email (contains '@') or
@@ -134,6 +136,7 @@ def splash_login_view(request):
             # which tenant they're working in for this session.
             request.session["active_tenant_id"] = str(tenant.id)
             request.session["active_tenant_subdomain"] = tenant.subdomain
+            register_sdta_session_record(request, tenant, staff)
             return redirect(request.GET.get("next", "home"))
 
         ctx["error"] = _LOGIN_ERROR
@@ -246,5 +249,6 @@ def home_view(request):
 
 def logout_view(request):
     """Log out and redirect back to the splash page."""
+    close_sdta_session_record(request)
     logout(request)
     return redirect("splash-login")

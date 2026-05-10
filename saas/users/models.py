@@ -9,6 +9,7 @@ import uuid
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from crm.models import Person
+from infrastructure.models import TenantState
 from config.base_models import TenantModel
 from config.tenant_context import get_current_tenant_id
 from numbering.mixins import NumberingMixin
@@ -407,8 +408,14 @@ class SessionLog(TenantModel):
         EMAIL = 'Email', 'Email'
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True,
+                             blank=True,
                              related_name='sessions')
-    session_id = models.CharField(max_length=200, unique=True)
+    tier_at_login = models.CharField(
+        max_length=12,
+        choices=TenantState.TierChoices.choices,
+        blank=True,
+        help_text='Tenant subscription tier at login (immutable snapshot for audits).',
+    )
     login_at = models.DateTimeField()
     logout_at = models.DateTimeField(null=True, blank=True)
     expiration_at = models.DateTimeField()
@@ -434,7 +441,7 @@ class SessionLog(TenantModel):
         ]
 
     def __str__(self):
-        return f'Session {self.session_id[:8]}… ({self.tenant_id})'
+        return f'Session {str(self.id)[:8]}… ({self.tenant_id})'
 
 
 class LoginAttemptLog(TenantModel):

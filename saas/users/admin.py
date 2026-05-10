@@ -70,12 +70,12 @@ class EmployeePreferenceAdmin(TenantModelAdmin):
 
 @admin.register(SessionLog)
 class SessionLogAdmin(TenantModelAdmin):
-    list_display = ('session_id', 'user', 'tenant_id', 'login_at',
+    list_display = ('id', 'tier_at_login', 'user', 'tenant_id', 'login_at',
                     'logout_at', 'mfa_used', 'device_type')
-    list_filter = ('tenant_id', 'mfa_used', 'device_type')
-    search_fields = ('session_id',)
-    readonly_fields = ('id', 'tenant_id', 'created_on', 'updated_on',
-                       'session_id', 'login_at')
+    list_filter = ('tenant_id', 'tier_at_login', 'mfa_used', 'device_type')
+    search_fields = ('id',)
+    readonly_fields = ('id', 'tenant_id', 'tier_at_login', 'created_on', 'updated_on',
+                       'login_at')
 
 
 @admin.register(LoginAttemptLog)

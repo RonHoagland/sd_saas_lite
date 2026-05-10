@@ -412,7 +412,7 @@ class SessionLogTest(SDTATestCase):
         now = datetime.now(tz=timezone.utc)
         defaults = {
             'user': user,
-            'session_id': uuid.uuid4().hex,
+            'tier_at_login': 'Lite',
             'login_at': now,
             'expiration_at': now,
             'ip_address': '127.0.0.1',
@@ -424,19 +424,10 @@ class SessionLogTest(SDTATestCase):
     def test_create(self):
         sl = self._make_session()
         self.assertIsNotNone(sl.id)
-        self.assertIsNotNone(sl.session_id)
 
     def test_str(self):
         sl = self._make_session()
-        self.assertIn(sl.session_id[:8], str(sl))
-
-    def test_unique_session_id(self):
-        from django.db import IntegrityError
-        user = self.make_user(email='sess_uniq@acme.com')
-        sid = uuid.uuid4().hex
-        self._make_session(user=user, session_id=sid)
-        with self.assertRaises(IntegrityError):
-            self._make_session(user=user, session_id=sid)
+        self.assertIn(str(sl.id)[:8], str(sl))
 
     def test_update_logout(self):
         sl = self._make_session()

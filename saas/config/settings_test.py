@@ -85,6 +85,7 @@ AXES_ENABLED = False
 # Remove axes backend so force_login() works without hitting axes middleware.
 AUTHENTICATION_BACKENDS = [
     'staff.backends.StaffUserBackend',
+    'api.backends.SchemaSafeSessionBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 

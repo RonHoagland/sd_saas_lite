@@ -97,6 +97,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'users.session_audit.SessionIdleTimeoutMiddleware',
     'config.middleware.AdminBypassMiddleware',       # /admin/ bypass — before TenantMiddleware
     'config.middleware.TenantMiddleware',            # tenant context for all other requests
     'config.middleware.InternalAPIKeyMiddleware',    # /internal/api/ key validation
@@ -291,6 +292,22 @@ else:
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Django session cookie lifetime — generous ceiling; sliding idle timeout for
+# auth UX is enforced in SessionIdleTimeoutMiddleware via TenantPreference.session_timeout_minutes.
+SESSION_COOKIE_AGE = config(
+    'SDTA_SESSION_COOKIE_MAX_AGE',
+    default=86400 * 7,
+    cast=int,
+)
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Fallback idle allowance (seconds) when TenantPreference has no session_timeout_minutes.
+SDTA_SESSION_IDLE_TIMEOUT_SECONDS = config(
+    'SDTA_SESSION_IDLE_TIMEOUT_SECONDS',
+    default=1800,
+    cast=int,
+)
 CSRF_COOKIE_HTTPONLY = True
 SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
 SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=0 if DEBUG else 31536000, cast=int)

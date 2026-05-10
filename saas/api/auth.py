@@ -20,19 +20,16 @@ Resolution order:
     4. On success, store `active_tenant_id` and `active_tenant_subdomain`
        in the session so TenantMiddleware can establish tenant context on
        subsequent requests (StaffUsers have no tenant_id of their own).
+       A `users.SessionLog` row is created with `tier_at_login` from the
+       workspace tenant; its UUID primary key is stored in the session under
+       `sdta_session_record_id` (browser keeps the standard Django session id
+       cookie only).
 
 All credential failures return HTTP 401 with a single generic message,
 per Security Features Spec V1 — never disclose which field was wrong.
 """
 
-from django.contrib.auth import (
-    BACKEND_SESSION_KEY,
-    HASH_SESSION_KEY,
-    SESSION_KEY,
-    logout,
-    get_user_model,
-)
-from django.contrib.sessions.models import Session
+from django.contrib.auth import login, logout, get_user_model
 from django.db import DatabaseError
 from django.middleware.csrf import rotate_token, get_token
 from rest_framework import status
@@ -42,6 +39,7 @@ from rest_framework.views import APIView
 
 from infrastructure.models import TenantState
 from staff.models import StaffUser
+from users.session_audit import close_sdta_session_record, register_sdta_session_record
 
 
 _GENERIC_CRED_ERROR = "Invalid workspace, username, or password."
@@ -165,18 +163,12 @@ class SessionLoginView(APIView):
     @staticmethod
     def _establish_session(request, *, user, tenant, is_tenant_admin):
         try:
-            if not request.session.session_key:
-                request.session.create()
-            request.session[SESSION_KEY] = str(user.pk)
-            request.session[BACKEND_SESSION_KEY] = user.backend
-            request.session[HASH_SESSION_KEY] = user.get_session_auth_hash()
+            login(request, user, backend=user.backend)
             request.session["active_tenant_id"] = str(tenant.id)
             request.session["active_tenant_subdomain"] = tenant.subdomain
+            register_sdta_session_record(request, tenant, user)
             request.session.modified = True
             rotate_token(request)
-            _ = Session.objects.filter(
-                session_key=request.session.session_key
-            ).exists()
         except DatabaseError:
             return Response(
                 {"detail": _SESSION_UNAVAILABLE},
@@ -202,6 +194,7 @@ class SessionLogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        close_sdta_session_record(request)
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
 

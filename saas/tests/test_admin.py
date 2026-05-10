@@ -460,12 +460,11 @@ class AdminChangelistViewTests(SDTATestCase):
     def test_users_sessionlog_changelist(self):
         from datetime import datetime, timezone
         from users.models import SessionLog
-        import uuid
         user = self.make_user(email='sl_cl@acme.com')
         now = datetime(2024, 1, 1, tzinfo=timezone.utc)
         SessionLog.objects.create(
             user=user,
-            session_id=str(uuid.uuid4()),
+            tier_at_login='Lite',
             login_at=now,
             expiration_at=now,
             ip_address='127.0.0.1',

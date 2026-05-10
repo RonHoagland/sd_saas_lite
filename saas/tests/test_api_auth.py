@@ -12,7 +12,7 @@ from config.tenant_context import set_current_tenant_id, clear_current_tenant_id
 from infrastructure.models import TenantState
 from staff.backends import StaffUserBackend
 from staff.models import StaffUser
-from users.models import User
+from users.models import User, SessionLog
 from crm.models import Person
 
 
@@ -89,6 +89,26 @@ class SessionLoginViewTest(TestCase):
             self.client.session.get('active_tenant_subdomain'),
             self.tenant.subdomain,
         )
+        self.assertIsNotNone(self.client.session.get('sdta_session_record_id'))
+        sl = SessionLog.all_objects.get(
+            pk=self.client.session['sdta_session_record_id'],
+        )
+        self.assertEqual(sl.tier_at_login, TenantState.TierChoices.LITE)
+        self.assertEqual(sl.user_id, self.user.pk)
+
+    def test_login_records_tenant_tier_snapshot(self):
+        self.tenant.tier = TenantState.TierChoices.PRO
+        self.tenant.save(update_fields=['tier'])
+        resp = self.client.post('/api/v1/auth/login/', {
+            'workspace': self.tenant.subdomain,
+            'username': 'auth_user',
+            'password': 'SecurePass123!',
+        }, format='json')
+        self.assertEqual(resp.status_code, 200)
+        sl = SessionLog.all_objects.get(
+            pk=self.client.session['sdta_session_record_id'],
+        )
+        self.assertEqual(sl.tier_at_login, TenantState.TierChoices.PRO)
 
     def test_workspace_mixed_case_normalises(self):
         resp = self.client.post('/api/v1/auth/login/', {
@@ -307,10 +327,12 @@ class SessionLogoutViewTest(TestCase):
             'password': 'SecurePass123!',
         }, format='json')
         self.assertEqual(login_resp.status_code, 200)
-        self.client.credentials(HTTP_COOKIE=login_resp.cookies.output(header='', sep='; '))
-        self.client.force_authenticate(user=self.user)
+        record_pk = self.client.session.get('sdta_session_record_id')
+        self.assertIsNotNone(record_pk)
         resp = self.client.post('/api/v1/auth/logout/')
         self.assertEqual(resp.status_code, 204)
+        sl = SessionLog.all_objects.get(pk=record_pk)
+        self.assertIsNotNone(sl.logout_at)
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
@@ -348,6 +370,30 @@ class SessionMeViewTest(TestCase):
         resp = self.client.get('/api/v1/auth/me/')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()['workspace'], self.tenant.subdomain)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class SessionIdleTimeoutApiTest(TestCase):
+    """Sliding idle timeout enforced via SessionIdleTimeoutMiddleware."""
+
+    def setUp(self):
+        self.client = APIClient(enforce_csrf_checks=False)
+        self.tenant = _make_tenant('idle')
+        self.user = _make_user(self.tenant, 'idle_user', 'SecurePass123!',
+                               email='idle@test.com')
+
+    def test_request_after_idle_deadline_returns_401(self):
+        self.client.post('/api/v1/auth/login/', {
+            'workspace': self.tenant.subdomain,
+            'username': 'idle_user',
+            'password': 'SecurePass123!',
+        }, format='json')
+        session = self.client.session
+        session['sdta_idle_deadline_ts'] = 1.0
+        session.save()
+
+        resp = self.client.get('/api/v1/auth/me/')
+        self.assertEqual(resp.status_code, 401)
 
 
 # ── StaffUserBackend ──────────────────────────────────────────────────────────
