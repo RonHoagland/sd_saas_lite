@@ -111,7 +111,7 @@ class LifecycleStateDefViewSet(TenantModelViewSet):
     Supports full CRUD with tenant scoping and filtering by entity type.
     """
 
-    queryset = LifecycleStateDef.all_objects.all()
+    queryset = LifecycleStateDef.objects.all()
     serializer_class = LifecycleStateDefSerializer
     filterset_fields = ['entity_type', 'state_type', 'is_default']
     search_fields = ['entity_type', 'state_name', 'state_label', 'description']
@@ -124,7 +124,7 @@ class LifecycleTransitionRuleViewSet(TenantModelViewSet):
     Supports full CRUD with tenant scoping and filtering by entity/state.
     """
 
-    queryset = LifecycleTransitionRule.all_objects.all()
+    queryset = LifecycleTransitionRule.objects.all()
     serializer_class = LifecycleTransitionRuleSerializer
     filterset_fields = ['entity_type', 'from_state', 'to_state', 'is_admin_override']
     search_fields = ['entity_type', 'from_state', 'to_state', 'description']
@@ -134,23 +134,17 @@ class LifecycleTransitionRuleViewSet(TenantModelViewSet):
 class LifecycleTransitionAuditViewSet(ReadOnlyTenantViewSet):
     """
     Read-only ViewSet for LifecycleTransitionAudit.
-    Immutable audit log — only list and retrieve operations permitted.
-    Queries are filtered by tenant_id from the request context.
+
+    Immutable audit log — list/retrieve only. Tenant scoping is enforced
+    by ReadOnlyTenantViewSet.get_queryset() which reads the middleware-
+    set tenant context (works for tenant Users and StaffUsers alike).
     """
 
     queryset = LifecycleTransitionAudit.objects.all()
     serializer_class = LifecycleTransitionAuditSerializer
-    filterset_fields = ['tenant_id', 'entity_type', 'entity_id', 'user_id', 'is_override']
+    filterset_fields = ['entity_type', 'entity_id', 'user_id', 'is_override']
     search_fields = ['entity_type', 'from_state', 'to_state', 'user_display', 'reason']
     ordering_fields = ['timestamp', 'entity_type', 'user_id']
-
-    def get_queryset(self):
-        """Filter audit records by tenant from request context."""
-        queryset = super().get_queryset()
-        tenant_id = self.request.user.tenant_id if self.request.user else None
-        if tenant_id:
-            queryset = queryset.filter(tenant_id=tenant_id)
-        return queryset
 
 
 # ==============================================================================

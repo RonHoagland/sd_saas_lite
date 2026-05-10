@@ -240,7 +240,7 @@ class DocumentViewSet(TenantModelViewSet):
     only scan_status can be updated.
     """
 
-    queryset = Document.all_objects.all()
+    queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     filterset_fields = ['scan_status']
     search_fields = ['original_filename', 'mime_type']
@@ -253,7 +253,7 @@ class FileUploadLogViewSet(TenantModelViewSet):
     Supports full CRUD with tenant scoping and filtering by status/entity.
     """
 
-    queryset = FileUploadLog.all_objects.all()
+    queryset = FileUploadLog.objects.all()
     serializer_class = FileUploadLogSerializer
     filterset_fields = ['status', 'entity_type']
     search_fields = ['original_filename', 'failure_reason']
@@ -263,23 +263,18 @@ class FileUploadLogViewSet(TenantModelViewSet):
 class FileDownloadLogViewSet(ReadOnlyTenantViewSet):
     """
     Read-only ViewSet for FileDownloadLog.
-    Immutable append-only audit log — only list and retrieve operations permitted.
-    Filters are applied by tenant_id from request context.
+
+    Immutable append-only audit log — list/retrieve only. Tenant scoping
+    is enforced by ReadOnlyTenantViewSet.get_queryset() which reads the
+    middleware-set tenant context (works for tenant Users via their own
+    tenant_id and for StaffUsers via session.active_tenant_id).
     """
 
     queryset = FileDownloadLog.objects.all()
     serializer_class = FileDownloadLogSerializer
-    filterset_fields = ['tenant_id', 'user_id', 'entity_type']
+    filterset_fields = ['user_id', 'entity_type']
     search_fields = ['user_display']
     ordering_fields = ['timestamp', 'user_id']
-
-    def get_queryset(self):
-        """Filter download logs by tenant from request context."""
-        queryset = super().get_queryset()
-        tenant_id = self.request.user.tenant_id if self.request.user else None
-        if tenant_id:
-            queryset = queryset.filter(tenant_id=tenant_id)
-        return queryset
 
 
 # ==============================================================================

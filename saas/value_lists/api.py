@@ -67,7 +67,7 @@ class ValueListViewSet(TenantModelViewSet):
     (enforced by model.delete()).
     """
 
-    queryset = ValueList.all_objects.all()
+    queryset = ValueList.objects.all()
     serializer_class = ValueListSerializer
     filterset_fields = ['is_system', 'slug']
     search_fields = ['name', 'slug', 'description']
@@ -80,7 +80,7 @@ class ValueListItemViewSet(TenantModelViewSet):
     Supports full CRUD with tenant scoping and filtering by parent ValueList.
     """
 
-    queryset = ValueListItem.all_objects.all()
+    queryset = ValueListItem.objects.all()
     serializer_class = ValueListItemSerializer
     filterset_fields = ['value_list', 'is_active', 'is_default']
     search_fields = ['label', 'value', 'value_list__name']

@@ -26,6 +26,23 @@ from rest_framework.response import Response
 from config.tenant_context import get_current_tenant_id
 
 
+def _scope_to_current_tenant(qs):
+    """Force a tenant_id filter on a queryset.
+
+    Defence-in-depth for the API layer. Even if a viewset declares its
+    `queryset` using `.all_objects` (which bypasses TenantManager), the
+    HTTP layer must never return rows from a different tenant than the
+    one the request is authenticated for.
+
+    Returns an empty queryset when no tenant context is established —
+    fail-safe (no rows) rather than fail-open (every row).
+    """
+    tenant_id = get_current_tenant_id()
+    if tenant_id is None:
+        return qs.none()
+    return qs.filter(tenant_id=tenant_id)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # BASE SERIALIZERS
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -128,7 +145,9 @@ class TenantModelViewSet(viewsets.ModelViewSet):
     Full CRUD ViewSet for TenantModel subclasses.
 
     Automatically:
-      - Filters queryset to the current tenant (via TenantManager).
+      - Re-filters queryset to the current tenant on every request, even
+        when the class `queryset` was declared with `.all_objects.all()`
+        (defence-in-depth — see `_scope_to_current_tenant`).
       - Passes request context to serializer.
       - Supports search, ordering, and filtering via DRF filters.
 
@@ -140,13 +159,7 @@ class TenantModelViewSet(viewsets.ModelViewSet):
     throttle_scope = 'standard'
 
     def get_queryset(self):
-        """
-        Return queryset filtered by TenantManager.
-
-        TenantManager.get_queryset() already filters by current tenant_id,
-        so no additional filtering is needed here.
-        """
-        return super().get_queryset()
+        return _scope_to_current_tenant(super().get_queryset())
 
     def perform_create(self, serializer):
         """Save with request context for audit field injection."""
@@ -159,12 +172,19 @@ class TenantModelViewSet(viewsets.ModelViewSet):
 
 class ReadOnlyTenantViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Read-only ViewSet for TenantModel subclasses.
+    Read-only ViewSet for TenantModel-aligned subclasses.
 
     Provides list and retrieve actions only. No create/update/delete.
     Used for audit logs, immutable records, and reference data.
+
+    Re-filters queryset to the current tenant on every request — works
+    for both TenantModel subclasses and standalone models that carry a
+    `tenant_id` UUIDField (e.g. LifecycleTransitionAudit, FileDownloadLog).
     """
     throttle_scope = 'standard'
+
+    def get_queryset(self):
+        return _scope_to_current_tenant(super().get_queryset())
 
 
 class TenantCreateReadViewSet(
@@ -176,9 +196,13 @@ class TenantCreateReadViewSet(
     """
     Create + Read-only ViewSet (no update, no delete).
 
-    Used for append-only models like upload logs.
+    Used for append-only models like upload logs. Tenant scoping enforced
+    at every read.
     """
     throttle_scope = 'standard'
+
+    def get_queryset(self):
+        return _scope_to_current_tenant(super().get_queryset())
 
 
 class TenantNoDeleteViewSet(
@@ -190,6 +214,9 @@ class TenantNoDeleteViewSet(
 ):
     """
     CRUD without delete. Used for models where records should
-    be deactivated rather than deleted.
+    be deactivated rather than deleted. Tenant scoping enforced.
     """
     throttle_scope = 'standard'
+
+    def get_queryset(self):
+        return _scope_to_current_tenant(super().get_queryset())

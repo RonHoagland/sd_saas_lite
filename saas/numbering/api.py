@@ -10,7 +10,12 @@
 
 from rest_framework import serializers, viewsets
 from rest_framework.routers import DefaultRouter
-from api.base import TenantModelSerializer, TenantModelViewSet, ReadOnlyTenantViewSet
+from api.base import (
+    TenantModelSerializer,
+    TenantModelViewSet,
+    ReadOnlyTenantViewSet,
+    _scope_to_current_tenant,
+)
 from .models import NumberingRule, NumberSequence, AssignedNumber
 
 
@@ -94,7 +99,7 @@ class NumberingRuleViewSet(TenantModelViewSet):
     Supports full CRUD operations with tenant scoping and filtering.
     """
 
-    queryset = NumberingRule.all_objects.all()
+    queryset = NumberingRule.objects.all()
     serializer_class = NumberingRuleSerializer
     filterset_fields = ['entity_type', 'is_enabled', 'reset_behavior']
     search_fields = ['entity_type', 'prefix', 'description']
@@ -103,8 +108,12 @@ class NumberingRuleViewSet(TenantModelViewSet):
 
 class NumberSequenceViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for NumberSequence (plain Django model).
-    Supports full CRUD operations with filtering and search.
+    ViewSet for NumberSequence.
+
+    NumberSequence is not a TenantModel subclass (its tenant scoping is
+    via its parent NumberingRule), but the table carries a `tenant_id`
+    column for direct filtering. We re-filter at the API layer to match
+    the same defence-in-depth pattern the TenantModelViewSet bases use.
     """
 
     queryset = NumberSequence.objects.all()
@@ -113,6 +122,9 @@ class NumberSequenceViewSet(viewsets.ModelViewSet):
     search_fields = ['rule__entity_type']
     ordering_fields = ['current_value', 'last_reset_date']
 
+    def get_queryset(self):
+        return _scope_to_current_tenant(super().get_queryset())
+
 
 class AssignedNumberViewSet(ReadOnlyTenantViewSet):
     """
@@ -120,7 +132,7 @@ class AssignedNumberViewSet(ReadOnlyTenantViewSet):
     Immutable records — only list and retrieve operations permitted.
     """
 
-    queryset = AssignedNumber.all_objects.all()
+    queryset = AssignedNumber.objects.all()
     serializer_class = AssignedNumberSerializer
     filterset_fields = ['entity_type', 'entity_id', 'rule_id']
     search_fields = ['number', 'entity_type', 'assigned_by']

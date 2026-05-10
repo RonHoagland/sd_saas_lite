@@ -157,7 +157,7 @@ class NoteViewSet(TenantModelViewSet):
     Supports full CRUD with tenant scoping and filtering by note type and parent entity.
     """
 
-    queryset = Note.all_objects.all()
+    queryset = Note.objects.all()
     serializer_class = NoteSerializer
     filterset_fields = ['note_type']
     search_fields = ['body']
