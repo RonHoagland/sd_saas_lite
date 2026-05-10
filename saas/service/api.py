@@ -794,6 +794,24 @@ class PaymentsViewSet(TenantModelViewSet):
     search_fields = ['payment_number', 'reference_number', 'invoice__invoice_number']
     ordering_fields = ['created_on', 'payment_number', 'status', 'payment_date', 'amount']
 
+    @action(detail=True, methods=['post'])
+    def transition(self, request, pk=None):
+        """Execute a Payment lifecycle transition (e.g. Open → Applied,
+        Processing → Returned)."""
+        entity = self.get_object()
+        to_state = request.data.get('to_state')
+        reason = request.data.get('reason', '')
+        execute_transition(entity, to_state, request.user, reason=reason)
+        return Response({'status': entity.status})
+
+    @action(detail=True, methods=['get'], url_path='available-transitions')
+    def available_transitions(self, request, pk=None):
+        """Return the set of valid next states for this Payment from its
+        current state, given the requesting user's roles."""
+        entity = self.get_object()
+        transitions = get_available_transitions(entity, request.user)
+        return Response(transitions)
+
 
 # ---------------------------------------------------------------------------
 # Accounting Serializers & ViewSets

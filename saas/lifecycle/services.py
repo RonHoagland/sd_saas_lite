@@ -5,6 +5,8 @@
 # Core function: execute_transition()
 # Helpers: get_available_transitions(), get_transition_history()
 
+import uuid
+
 from lifecycle.models import (
     LifecycleStateDef,
     LifecycleTransitionRule,
@@ -18,6 +20,13 @@ from lifecycle.exceptions import (
 )
 
 
+# Stable sentinel UUID used as the audit `user_id` for system-initiated
+# transitions (e.g. payment cascade auto-paying an invoice). Distinct from
+# any real user UUID; safe to filter on in audit-log queries.
+SYSTEM_USER_ID = uuid.UUID('00000000-0000-0000-0000-000000000000')
+SYSTEM_USER_DISPLAY = 'System'
+
+
 def execute_transition(entity, to_state, user, reason="", ip_address=None):
     """
     Execute a state transition on an entity.
@@ -27,7 +36,7 @@ def execute_transition(entity, to_state, user, reason="", ip_address=None):
     2. Determine entity_type (from entity.lifecycle_entity_type or _meta.model_name)
     3. Get tenant_id from entity.tenant_id
     4. Look up LifecycleTransitionRule
-    5. Validate role requirement
+    5. Validate role requirement (skipped in system mode)
     6. Validate reason requirement
     7. Update entity.status and save
     8. Create LifecycleTransitionAudit record
@@ -36,7 +45,11 @@ def execute_transition(entity, to_state, user, reason="", ip_address=None):
     Args:
         entity: Model instance with status field and tenant_id
         to_state: Target state name (str)
-        user: User instance performing transition
+        user: User instance performing transition, OR None for system mode.
+              In system mode the role check is bypassed and the audit row
+              is attributed to SYSTEM_USER_ID + 'System'. Reserved for
+              cascades and background tasks (e.g. Payments.save() auto-
+              transitioning an Invoice to Paid).
         reason: Optional transition reason/comment
         ip_address: Optional originating IP
 
@@ -45,7 +58,7 @@ def execute_transition(entity, to_state, user, reason="", ip_address=None):
 
     Raises:
         TransitionDeniedError: If no rule exists for this transition
-        PermissionDeniedError: If user lacks required role
+        PermissionDeniedError: If user lacks required role (only when user is not None)
         ReasonRequiredError: If transition requires reason but none given
         FinalStateError: If transition originates from final state without override
     """
@@ -75,8 +88,8 @@ def execute_transition(entity, to_state, user, reason="", ip_address=None):
             f"{current_state} → {to_state} in this tenant."
         )
 
-    # 5. Validate role requirement
-    if rule.required_role:
+    # 5. Validate role requirement (system mode bypasses).
+    if rule.required_role and user is not None:
         has_role = _user_has_role(user, rule.required_role, tenant_id)
         if not has_role:
             raise PermissionDeniedError(
@@ -123,11 +136,18 @@ def execute_transition(entity, to_state, user, reason="", ip_address=None):
         )
     entity.save()
 
-    # 8. Create audit record
+    # 8. Create audit record (system mode gets the sentinel user_id + 'System' display).
+    if user is None:
+        audit_user_id = SYSTEM_USER_ID
+        audit_user_display = SYSTEM_USER_DISPLAY
+    else:
+        audit_user_id = user.id
+        audit_user_display = getattr(user, 'email', str(user))
+
     audit = LifecycleTransitionAudit.objects.create(
         tenant_id=tenant_id,
-        user_id=user.id,
-        user_display=getattr(user, 'email', str(user)),
+        user_id=audit_user_id,
+        user_display=audit_user_display,
         entity_type=entity_type,
         entity_id=entity.id,
         from_state=current_state,

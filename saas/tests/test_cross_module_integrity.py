@@ -403,7 +403,28 @@ class CrossModuleWiringTest(SDTATestCase):
     """Complex cross-app scenarios that exercise multiple modules together."""
 
     def test_full_service_lifecycle(self):
-        """SR → WO → WO Lines → Invoice → Payment → PAID."""
+        """SR → WO → WO Lines → Invoice → SENT → Payment → PAID.
+
+        Auto-paying via the Payments cascade requires the invoice to be
+        in Sent state first (Draft → Paid is not a valid transition in
+        the seed graph). We seed the minimum lifecycle rules locally to
+        exercise the full path through `execute_transition`.
+        """
+        from lifecycle.models import LifecycleStateDef, LifecycleTransitionRule
+        for name, st in [
+            ('Draft', 'normal'), ('Sent', 'normal'),
+            ('Partial', 'normal'), ('Paid', 'final'),
+        ]:
+            LifecycleStateDef.objects.create(
+                tenant_id=self.tenant_id, entity_type='invoice',
+                state_name=name, state_label=name, state_type=st,
+            )
+        for from_s, to_s in [('Draft', 'Sent'), ('Sent', 'Partial'), ('Sent', 'Paid')]:
+            LifecycleTransitionRule.objects.create(
+                tenant_id=self.tenant_id, entity_type='invoice',
+                from_state=from_s, to_state=to_s,
+            )
+
         customer = self.make_customer()
         sr = self.make_service_request(customer=customer, subject='Full Lifecycle')
         wo = self.make_work_order(customer=customer, subject='Full WO')
@@ -432,6 +453,10 @@ class CrossModuleWiringTest(SDTATestCase):
         )
         inv.refresh_from_db()
         self.assertEqual(inv.total, Decimal('200.00'))
+
+        # Send the invoice (required precondition for Sent → Paid).
+        inv.status = Invoice.StatusChoices.SENT
+        inv.save()
 
         Payments.objects.create(
             tenant_id=self.tenant_id, invoice=inv,

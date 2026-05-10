@@ -486,9 +486,14 @@ class Invoice(TenantModel, NumberingMixin, LifecycleMixin):
 
     def recalculate_totals(self):
         """
-        Recalculates subtotal, tax_amount, total, and balance_due.
+        Recalculate the numeric fields (subtotal, tax_amount, total,
+        amount_paid, balance_due) from line items and applied payments.
+
+        Status changes are NOT performed here — see
+        `_attempt_payment_status_transition` for that. Recalculation must
+        be safe to call from any save path; lifecycle work happens on a
+        separate hook to avoid recursion.
         """
-        # Precision constants
         D2 = Decimal('0.01')
         raw_subtotal = sum((line.line_total for line in self.lines.all()), Decimal('0.00'))
         subtotal_dec = raw_subtotal if isinstance(raw_subtotal, Decimal) else Decimal(str(raw_subtotal or 0))
@@ -505,14 +510,56 @@ class Invoice(TenantModel, NumberingMixin, LifecycleMixin):
         ).quantize(D2)
         self.balance_due = (self.total - self.amount_paid).quantize(D2)
 
-        # Auto-update status based on balance
-        if self.total > 0:
-            if self.balance_due <= 0:
-                self.status = self.StatusChoices.PAID
-            elif self.amount_paid > 0:
-                self.status = self.StatusChoices.PARTIAL
-            else:
-                self.status = self.StatusChoices.DRAFT
+    def _desired_payment_status(self):
+        """The status the math implies, ignoring the current value.
+
+        Returns one of {PAID, PARTIAL} when payments have moved the
+        balance, or None when the math doesn't imply a transition (zero-
+        total invoice, no payments yet, etc.). Sent / Draft / Overdue /
+        Voided are all valid resting states the math should not perturb.
+        """
+        if self.total <= 0 or self.amount_paid <= 0:
+            return None
+        if self.balance_due <= 0:
+            return self.StatusChoices.PAID
+        return self.StatusChoices.PARTIAL
+
+    def _attempt_payment_status_transition(self):
+        """If applied-payment math implies a different status than the
+        invoice currently holds, try to move via the lifecycle layer so
+        an audit row is written and `_apply_lifecycle_transition` runs
+        (setting `paid_at` etc.).
+
+        Falls back silently when no transition rule exists from the
+        current state to the desired one — for example, a Draft invoice
+        with a payment recorded against it stays Draft because the seed
+        graph has no Draft → Paid edge (the user must Send first).
+        """
+        desired = self._desired_payment_status()
+        if not desired or desired == self.status:
+            return
+        # Avoid recursion: execute_transition calls entity.save(), which
+        # would re-enter Invoice.save() -> recalculate -> here.
+        if getattr(self, '_in_payment_status_transition', False):
+            return
+        # Local imports keep service.models free of lifecycle import-
+        # ordering risk at module load time.
+        from lifecycle.services import execute_transition
+        from lifecycle.exceptions import (
+            TransitionDeniedError, FinalStateError, ReasonRequiredError,
+        )
+        self._in_payment_status_transition = True
+        try:
+            try:
+                execute_transition(self, desired, user=None)
+            except (TransitionDeniedError, FinalStateError, ReasonRequiredError):
+                # No rule from current → desired (e.g. Draft → Paid),
+                # the current state is final, or the rule needs a reason
+                # we don't have at this layer. Numbers are already saved;
+                # the status will be reconciled when the user sends/voids/etc.
+                pass
+        finally:
+            self._in_payment_status_transition = False
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -524,6 +571,11 @@ class Invoice(TenantModel, NumberingMixin, LifecycleMixin):
             from django.core.exceptions import ValidationError
             raise ValidationError({'voided_reason': 'Required when status is Voided.'})
         super().save(*args, **kwargs)
+        # Status transition runs AFTER persistence so the lifecycle layer
+        # observes the freshly-saved numeric fields. Reentrancy guard
+        # prevents infinite cascade.
+        if not getattr(self, '_in_payment_status_transition', False):
+            self._attempt_payment_status_transition()
 
     def __str__(self):
         return f'Invoice {self.invoice_number} — {self.customer}'
