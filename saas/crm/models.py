@@ -186,6 +186,16 @@ class Customer(TenantModel, NumberingMixin, LifecycleMixin):
     def __str__(self):
         return self.display_name or self.company_name or self.customer_number
 
+    def payments(self):
+        """``Payments`` queryset for this customer (linked through ``Invoice``)."""
+        from service.models import Payments
+        return Payments.objects.filter(invoice__customer_id=self.pk)
+
+    @property
+    def total_payments_count(self):
+        """Number of payment records across all invoices for this customer."""
+        return self.payments().count()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Snapshot DNC fields so save() can detect which one the caller just

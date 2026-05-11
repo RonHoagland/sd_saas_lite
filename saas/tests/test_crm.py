@@ -115,6 +115,37 @@ class CustomerTest(SDTATestCase):
         c.refresh_from_db()
         self.assertEqual(c.status, 'Hold')
 
+    def test_total_payments_count_via_invoice(self):
+        from service.models import Invoice, InvoiceLine, Payments
+        cust = self.make_customer(company_name='PayCo', account_type='Commercial')
+        other = self.make_customer(company_name='OtherCo', account_type='Commercial')
+        inv = Invoice.objects.create(customer=cust, tax_rate=0)
+        InvoiceLine.objects.create(
+            tenant_id=self.tenant_id, invoice=inv, quantity=1, unit_price=100,
+        )
+        inv_other = Invoice.objects.create(customer=other, tax_rate=0)
+        InvoiceLine.objects.create(
+            tenant_id=self.tenant_id, invoice=inv_other, quantity=1, unit_price=50,
+        )
+        Payments.objects.create(
+            tenant_id=self.tenant_id, invoice=inv, amount=10,
+            payment_date='2026-05-01', status=Payments.StatusChoices.PAID,
+        )
+        Payments.objects.create(
+            tenant_id=self.tenant_id, invoice=inv, amount=20,
+            payment_date='2026-05-02', status=Payments.StatusChoices.PAID,
+        )
+        Payments.objects.create(
+            tenant_id=self.tenant_id, invoice=inv_other, amount=50,
+            payment_date='2026-05-03', status=Payments.StatusChoices.PAID,
+        )
+        self.assertEqual(cust.total_payments_count, 2)
+        self.assertEqual(other.total_payments_count, 1)
+        self.assertCountEqual(
+            list(cust.payments().values_list('amount', flat=True)),
+            [10, 20],
+        )
+
     def test_delete(self):
         c = Customer.objects.create(company_name='DelCo', account_type='Commercial')
         c_id = c.id

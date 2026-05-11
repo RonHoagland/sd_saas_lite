@@ -310,15 +310,22 @@ class Quote(TenantModel, NumberingMixin, LifecycleMixin):
 
     def recalculate_totals(self):
         """
-        Recalculates subtotal, tax_amount, and total based on lines.
+        Recalculates subtotal, tax_amount, and total from lines.
+
+        Tax applies only to ``is_taxable`` line amounts; ``is_discount``
+        lines subtract from subtotal and (when taxable) from the tax base.
         """
-        D2 = Decimal('0.01')
-        raw_subtotal = sum((line.line_total for line in self.lines.all()), Decimal('0.00'))
-        subtotal_dec = raw_subtotal if isinstance(raw_subtotal, Decimal) else Decimal(str(raw_subtotal or 0))
-        tax_rate_dec = self.tax_rate if isinstance(self.tax_rate, Decimal) else Decimal(str(self.tax_rate or 0))
+        from .calc_lines import D2, line_signed_total, line_taxable_signed_total
+
+        lines = list(self.lines.all())
+        subtotal_dec = sum((line_signed_total(l) for l in lines), Decimal('0.00'))
+        taxable_dec = sum((line_taxable_signed_total(l) for l in lines), Decimal('0.00'))
+        tax_rate_dec = self.tax_rate if isinstance(self.tax_rate, Decimal) else Decimal(
+            str(self.tax_rate or 0)
+        )
 
         self.subtotal = subtotal_dec.quantize(D2)
-        self.tax_amount = (subtotal_dec * tax_rate_dec).quantize(D2)
+        self.tax_amount = (taxable_dec * tax_rate_dec).quantize(D2)
         self.total = (self.subtotal + self.tax_amount).quantize(D2)
 
     def save(self, *args, **kwargs):
@@ -339,6 +346,8 @@ class Quote(TenantModel, NumberingMixin, LifecycleMixin):
         now = timezone.now()
         if to_state == self.StatusChoices.SENT:
             self.sent_at = now
+            from .snapshot_utils import record_quote_sent_snapshot
+            record_quote_sent_snapshot(self)
         elif to_state == self.StatusChoices.ACCEPTED:
             self.accepted_at = now
         elif to_state == self.StatusChoices.DECLINED:
@@ -372,6 +381,8 @@ class QuoteLine(TenantModel):
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=1)
     unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     line_total = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    is_taxable = models.BooleanField(default=True)
+    is_discount = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'service_quoteline'
@@ -494,12 +505,16 @@ class Invoice(TenantModel, NumberingMixin, LifecycleMixin):
         be safe to call from any save path; lifecycle work happens on a
         separate hook to avoid recursion.
         """
-        D2 = Decimal('0.01')
-        raw_subtotal = sum((line.line_total for line in self.lines.all()), Decimal('0.00'))
-        subtotal_dec = raw_subtotal if isinstance(raw_subtotal, Decimal) else Decimal(str(raw_subtotal or 0))
-        tax_rate_dec = self.tax_rate if isinstance(self.tax_rate, Decimal) else Decimal(str(self.tax_rate or 0))
+        from .calc_lines import D2, line_signed_total, line_taxable_signed_total
+
+        lines = list(self.lines.all())
+        subtotal_dec = sum((line_signed_total(l) for l in lines), Decimal('0.00'))
+        taxable_dec = sum((line_taxable_signed_total(l) for l in lines), Decimal('0.00'))
+        tax_rate_dec = self.tax_rate if isinstance(self.tax_rate, Decimal) else Decimal(
+            str(self.tax_rate or 0)
+        )
         self.subtotal = subtotal_dec.quantize(D2)
-        self.tax_amount = (subtotal_dec * tax_rate_dec).quantize(D2)
+        self.tax_amount = (taxable_dec * tax_rate_dec).quantize(D2)
         self.total = (self.subtotal + self.tax_amount).quantize(D2)
         raw_amount_paid = sum((pmt.amount for pmt in self.payments.filter(
             status__in=[Payments.StatusChoices.APPLIED, Payments.StatusChoices.PAID]
@@ -508,7 +523,14 @@ class Invoice(TenantModel, NumberingMixin, LifecycleMixin):
             raw_amount_paid if isinstance(raw_amount_paid, Decimal)
             else Decimal(str(raw_amount_paid or 0))
         ).quantize(D2)
-        self.balance_due = (self.total - self.amount_paid).quantize(D2)
+        deposit_credit = (
+            self.deposit_amount if self.deposit_applied else Decimal('0')
+        )
+        if not isinstance(deposit_credit, Decimal):
+            deposit_credit = Decimal(str(deposit_credit or 0))
+        deposit_credit = deposit_credit.quantize(D2)
+        raw_balance = (self.total - self.amount_paid - deposit_credit).quantize(D2)
+        self.balance_due = raw_balance if raw_balance > 0 else Decimal('0.00')
 
     def _desired_payment_status(self):
         """The status the math implies, ignoring the current value.
@@ -589,6 +611,8 @@ class Invoice(TenantModel, NumberingMixin, LifecycleMixin):
         now = timezone.now()
         if to_state == self.StatusChoices.SENT:
             self.sent_at = now
+            from .snapshot_utils import record_invoice_sent_snapshot
+            record_invoice_sent_snapshot(self)
         elif to_state == self.StatusChoices.PAID:
             self.paid_at = now
         elif to_state == self.StatusChoices.OVERDUE:
@@ -620,6 +644,8 @@ class InvoiceLine(TenantModel):
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=1)
     unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     line_total = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    is_taxable = models.BooleanField(default=True)
+    is_discount = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'service_invoiceline'
@@ -846,3 +872,65 @@ class Ledger(TenantModel):
 
     def __str__(self):
         return f'{self.entry_type} {self.amount} — {self.account} ({self.transaction_date})'
+
+
+# ---------------------------------------------------------------------------
+# Send-time snapshots (Top-Down Spec Phases 5.4 / 6.4)
+# ---------------------------------------------------------------------------
+
+
+class QuoteSnapshot(TenantModel):
+    """
+    Immutable totals + line detail captured when a Quote is sent.
+    PDF and disputes should prefer this over mutating live line rows.
+    """
+
+    quote = models.ForeignKey(
+        Quote, on_delete=models.CASCADE, related_name='snapshots',
+    )
+    subtotal = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    tax_rate = models.DecimalField(max_digits=6, decimal_places=4, default=0)
+    tax_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    customer_company_name = models.CharField(max_length=200, blank=True)
+    customer_display_name = models.CharField(max_length=200, blank=True)
+    customer_phone = models.CharField(max_length=80, blank=True)
+    customer_address = models.TextField(blank=True)
+    lines_json = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        db_table = 'service_quotesnapshot'
+        indexes = [
+            models.Index(fields=['tenant_id', 'quote_id']),
+        ]
+
+    def __str__(self):
+        return f'Snapshot for {self.quote_id} @ {self.created_on}'
+
+
+class InvoiceSnapshot(TenantModel):
+    """Immutable capture when an Invoice is sent."""
+
+    invoice = models.ForeignKey(
+        Invoice, on_delete=models.CASCADE, related_name='snapshots',
+    )
+    subtotal = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    tax_rate = models.DecimalField(max_digits=6, decimal_places=4, default=0)
+    tax_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    deposit_applied = models.BooleanField(default=False)
+    deposit_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    customer_company_name = models.CharField(max_length=200, blank=True)
+    customer_display_name = models.CharField(max_length=200, blank=True)
+    customer_phone = models.CharField(max_length=80, blank=True)
+    customer_address = models.TextField(blank=True)
+    lines_json = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        db_table = 'service_invoicesnapshot'
+        indexes = [
+            models.Index(fields=['tenant_id', 'invoice_id']),
+        ]
+
+    def __str__(self):
+        return f'Snapshot for {self.invoice_id} @ {self.created_on}'

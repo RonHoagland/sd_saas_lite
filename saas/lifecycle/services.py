@@ -191,7 +191,9 @@ def get_available_transitions(entity, user):
     )
 
     transitions = []
-    user_roles = _get_user_roles(user, tenant_id)
+    user_roles = set(_get_user_roles(user, tenant_id))
+    if getattr(user, 'is_tenant_admin', False):
+        user_roles.add('Tenant Administrator')
 
     for rule in rules:
         # If rule requires a role, check if user has it
@@ -245,6 +247,10 @@ def _user_has_role(user, role_name, tenant_id):
     Check if user has a specific role in the tenant.
     Lazy import to avoid circular dependencies.
 
+    The reserved role name ``Tenant Administrator`` matches users with
+    ``is_tenant_admin=True`` (no ``EmployeeRole`` row required). Seeded
+    lifecycle rules can use this for admin-only transitions.
+
     Args:
         user: User instance
         role_name: Name of role to check
@@ -253,6 +259,8 @@ def _user_has_role(user, role_name, tenant_id):
     Returns:
         bool: True if user has role, False otherwise
     """
+    if role_name == 'Tenant Administrator':
+        return bool(getattr(user, 'is_tenant_admin', False))
     try:
         from users.models import EmployeeRole
         return EmployeeRole.all_objects.filter(

@@ -55,9 +55,23 @@ class TenantModelSerializer(serializers.ModelSerializer):
       - Read-only audit fields (id, tenant_id, created_by/on, updated_by/on).
       - Auto-injection of tenant_id and created_by/updated_by on create.
       - Auto-injection of updated_by on update.
+      - Read-only ``status`` for models using ``LifecycleMixin`` — state
+        changes must go through the ``transition`` action / lifecycle service.
 
     Subclasses extend Meta.fields with their model-specific fields.
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        model = getattr(self.Meta, 'model', None)
+        if model is None or 'status' not in self.fields:
+            return
+        from lifecycle.mixins import LifecycleMixin
+        try:
+            if issubclass(model, LifecycleMixin):
+                self.fields['status'].read_only = True
+        except TypeError:
+            pass
 
     class Meta:
         fields = [

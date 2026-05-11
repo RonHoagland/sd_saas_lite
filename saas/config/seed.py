@@ -28,49 +28,74 @@ from django.db import transaction
 # Default pattern: PREFIX-YY-####  (e.g. C-26-0001)
 # Reset behavior: yearly (sequence resets each calendar year).
 
+# Prefix / include_year / reset_behavior — Tenant Provisioning Seed Data Spec V2 §5.1–5.4.
 NUMBERING_RULES = [
     # ── CRM ──
-    {'entity_type': 'customer',        'prefix': 'C',   'description': 'Customer numbers'},
-    {'entity_type': 'lead',            'prefix': 'L',   'description': 'Lead numbers'},
-    {'entity_type': 'opportunity',     'prefix': 'OPP', 'description': 'Opportunity numbers'},
+    {'entity_type': 'customer', 'prefix': 'C', 'description': 'Customer numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'lead', 'prefix': 'LD', 'description': 'Lead numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'opportunity', 'prefix': 'OP', 'description': 'Opportunity numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
 
     # ── Service ──
-    {'entity_type': 'service_request', 'prefix': 'SR',  'description': 'Service request numbers'},
-    {'entity_type': 'work_order',      'prefix': 'WO',  'description': 'Work order numbers'},
-    {'entity_type': 'quote',           'prefix': 'Q',   'description': 'Quote numbers'},
-    {'entity_type': 'invoice',         'prefix': 'INV', 'description': 'Invoice numbers'},
-    {'entity_type': 'payment',         'prefix': 'PAY', 'description': 'Payment numbers'},
+    {'entity_type': 'service_request', 'prefix': 'SR', 'description': 'Service request numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'work_order', 'prefix': 'W', 'description': 'Work order numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'quote', 'prefix': 'Q', 'description': 'Quote numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'invoice', 'prefix': 'I', 'description': 'Invoice numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'payment', 'prefix': 'P', 'description': 'Payment numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
 
     # ── Procurement ──
-    {'entity_type': 'vendor',          'prefix': 'V',   'description': 'Vendor numbers'},
-    {'entity_type': 'purchase_order',  'prefix': 'PO',  'description': 'Purchase order numbers'},
-    {'entity_type': 'vendor_bill',     'prefix': 'VB',  'description': 'Vendor bill numbers'},
-    {'entity_type': 'requisition',     'prefix': 'REQ', 'description': 'Requisition numbers'},
-    {'entity_type': 'rma',             'prefix': 'RMA', 'description': 'RMA numbers'},
+    {'entity_type': 'vendor', 'prefix': 'V', 'description': 'Vendor numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'purchase_order', 'prefix': 'PO', 'description': 'Purchase order numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'vendor_bill', 'prefix': 'VB', 'description': 'Vendor bill numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'requisition', 'prefix': 'RQ', 'description': 'Requisition numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'rma', 'prefix': 'RMA', 'description': 'RMA numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
 
     # ── Maintenance ──
-    {'entity_type': 'asset',                    'prefix': 'A',  'description': 'Asset numbers'},
-    {'entity_type': 'agreement',                'prefix': 'AGR','description': 'Agreement numbers'},
-    {'entity_type': 'preventative_maintenance', 'prefix': 'PM', 'description': 'PM schedule numbers'},
+    {'entity_type': 'asset', 'prefix': 'A', 'description': 'Asset numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'agreement', 'prefix': 'AG', 'description': 'Agreement numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'preventative_maintenance', 'prefix': 'PM', 'description': 'PM schedule numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
 
     # ── Tasks ──
-    {'entity_type': 'task',            'prefix': 'T',   'description': 'Task numbers'},
+    {'entity_type': 'task', 'prefix': 'T', 'description': 'Task numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
 
     # ── Workforce ──
-    {'entity_type': 'work_group',      'prefix': 'WG',  'description': 'Work group numbers'},
+    {'entity_type': 'work_group', 'prefix': 'WG', 'description': 'Work group numbers',
+     'include_year': False, 'reset_behavior': 'none'},
 
     # ── Fleet ──
-    {'entity_type': 'vehicle',         'prefix': 'VH',  'description': 'Vehicle numbers'},
+    {'entity_type': 'vehicle', 'prefix': 'VS', 'description': 'Vehicle numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
 
-    # ── Inventory ──
-    {'entity_type': 'inventory_item',  'prefix': 'XT',  'description': 'Product / inventory item numbers'},
+    # ── Inventory (prefix from Numbering Service V1 §6.1 cipher at provision time) ──
+    {'entity_type': 'inventory_item', 'use_dynamic_inventory_prefix': True,
+     'description': 'Product / inventory item numbers',
+     'include_year': False, 'reset_behavior': 'none'},
 
     # ── Automation ──
-    {'entity_type': 'workflow',        'prefix': 'WF',  'description': 'Workflow numbers'},
-    {'entity_type': 'equipment',       'prefix': 'EQ',  'description': 'Equipment numbers'},
+    {'entity_type': 'workflow', 'prefix': 'WF', 'description': 'Workflow numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
+    {'entity_type': 'equipment', 'prefix': 'EQ', 'description': 'Equipment numbers',
+     'include_year': True, 'reset_behavior': 'yearly'},
 
     # ── Users ──
-    {'entity_type': 'employee',        'prefix': 'E',   'description': 'Employee numbers'},
+    {'entity_type': 'employee', 'prefix': 'E', 'description': 'Employee numbers',
+     'include_year': False, 'reset_behavior': 'none'},
 ]
 
 
@@ -321,16 +346,35 @@ LIFECYCLE_STATES = {
 # Empty string for required_role = no role restriction.
 
 def _transitions(items):
-    """Build a list of transition dicts from compact tuples."""
-    return [
-        {
+    """Build transition dicts from tuples or dicts.
+
+    Tuple: (from, to) | (from, to, required_role) |
+            (from, to, required_role, requires_reason) |
+            (from, to, required_role, requires_reason, is_admin_override)
+    """
+    result = []
+    for raw in items:
+        if isinstance(raw, dict):
+            result.append({
+                'from_state': raw['from_state'],
+                'to_state': raw['to_state'],
+                'required_role': raw.get('required_role', ''),
+                'requires_reason': raw.get('requires_reason', False),
+                'is_admin_override': raw.get('is_admin_override', False),
+            })
+            continue
+        t = raw
+        role = t[2] if len(t) > 2 else ''
+        reason = t[3] if len(t) > 3 else False
+        override = t[4] if len(t) > 4 else False
+        result.append({
             'from_state': t[0],
             'to_state': t[1],
-            'required_role': t[2] if len(t) > 2 else '',
-            'requires_reason': t[3] if len(t) > 3 else False,
-        }
-        for t in items
-    ]
+            'required_role': role,
+            'requires_reason': reason,
+            'is_admin_override': override,
+        })
+    return result
 
 
 LIFECYCLE_TRANSITIONS = {
@@ -339,11 +383,11 @@ LIFECYCLE_TRANSITIONS = {
 
     'customer': _transitions([
         ('Active',   'Inactive'),
-        ('Active',   'Hold',     '', True),       # reason required for hold
-        ('Active',   'Closed',   '', True),
+        ('Active',   'Hold',     'Tenant Administrator', True),
+        ('Active',   'Closed',   'Tenant Administrator', True),
         ('Inactive', 'Active'),
         ('Hold',     'Active'),
-        ('Hold',     'Closed',   '', True),
+        ('Hold',     'Closed',   'Tenant Administrator', True),
     ]),
     'lead': _transitions([
         ('New',       'Contacted'),
@@ -384,6 +428,8 @@ LIFECYCLE_TRANSITIONS = {
         ('In Progress', 'Cancelled',   '', True),
         ('On Hold',     'In Progress'),
         ('On Hold',     'Cancelled',   '', True),
+        # Admin reopen completed job (override from final Completed)
+        ('Completed', 'In Progress', 'Tenant Administrator', True, True),
     ]),
     'quote': _transitions([
         ('Draft',    'Sent'),
@@ -814,25 +860,30 @@ def seed_numbering(tenant_id, created_by='System'):
     """
     Create NumberingRule + NumberSequence for each numbered entity type.
 
-    Default pattern: PREFIX-YY-#### with yearly reset.
-    Tenants can customize rules later via admin.
+    Default pattern: PREFIX-YY-#### with yearly reset (per-entity overrides
+    in NUMBERING_RULES). Inventory item prefix uses Numbering Service V1 §6.1.
     """
     from numbering.models import NumberingRule, NumberSequence
+    from numbering.services import compute_inventory_item_prefix
 
     rules_created = 0
     for rule_def in NUMBERING_RULES:
+        if rule_def.get('use_dynamic_inventory_prefix'):
+            prefix = compute_inventory_item_prefix()
+        else:
+            prefix = rule_def['prefix']
         rule = NumberingRule(
             tenant_id=tenant_id,
             entity_type=rule_def['entity_type'],
-            prefix=rule_def['prefix'],
+            prefix=prefix,
             description=rule_def.get('description', ''),
             is_enabled=True,
-            include_year=True,
+            include_year=rule_def.get('include_year', True),
             year_format='YY',
             include_month=False,
             sequence_length=4,
             delimiter='-',
-            reset_behavior='yearly',
+            reset_behavior=rule_def.get('reset_behavior', 'yearly'),
             created_by=created_by,
             updated_by=created_by,
         )
@@ -894,7 +945,7 @@ def seed_lifecycle(tenant_id, created_by='System'):
                 to_state=trans['to_state'],
                 required_role=trans.get('required_role', ''),
                 requires_reason=trans.get('requires_reason', False),
-                is_admin_override=False,
+                is_admin_override=trans.get('is_admin_override', False),
                 created_by=created_by,
                 updated_by=created_by,
             ))

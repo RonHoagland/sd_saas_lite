@@ -58,6 +58,7 @@ class UserSerializer(serializers.ModelSerializer):
             'person_display',
             'department_display',
             'position_display',
+            'status',
             'created_by',
             'created_on',
             'updated_by',

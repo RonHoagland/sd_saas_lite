@@ -30,8 +30,15 @@ class SeedDataIntegrityTest(SDTATestCase):
         self.assertEqual(len(types), len(set(types)))
 
     def test_numbering_unique_prefixes(self):
-        """No duplicate prefix in NUMBERING_RULES."""
-        prefixes = [r['prefix'] for r in NUMBERING_RULES]
+        """No duplicate effective prefix in NUMBERING_RULES."""
+        from numbering.services import compute_inventory_item_prefix
+
+        prefixes = []
+        for r in NUMBERING_RULES:
+            if r.get('use_dynamic_inventory_prefix'):
+                prefixes.append(compute_inventory_item_prefix())
+            else:
+                prefixes.append(r['prefix'])
         self.assertEqual(len(prefixes), len(set(prefixes)))
 
     def test_lifecycle_states_count(self):
@@ -86,6 +93,8 @@ class SeedDataIntegrityTest(SDTATestCase):
                 if s['state_type'] == 'final'
             }
             for trans in transitions:
+                if trans.get('is_admin_override'):
+                    continue
                 self.assertNotIn(
                     trans['from_state'], final_states,
                     f"Entity '{entity_type}': transition from final state '{trans['from_state']}'"
@@ -184,6 +193,25 @@ class SeedNumberingTest(SDTATestCase):
         self.assertEqual(rule.delimiter, '-')
         self.assertEqual(rule.reset_behavior, 'yearly')
 
+    def test_inventory_item_rule_matches_cipher_prefix(self):
+        from numbering.services import compute_inventory_item_prefix
+
+        seed_numbering(self.tenant_id)
+        rule = NumberingRule.all_objects.get(
+            tenant_id=self.tenant_id, entity_type='inventory_item',
+        )
+        self.assertEqual(rule.prefix, compute_inventory_item_prefix())
+        self.assertFalse(rule.include_year)
+        self.assertEqual(rule.reset_behavior, 'none')
+
+    def test_employee_rule_no_year(self):
+        seed_numbering(self.tenant_id)
+        rule = NumberingRule.all_objects.get(
+            tenant_id=self.tenant_id, entity_type='employee',
+        )
+        self.assertFalse(rule.include_year)
+        self.assertEqual(rule.reset_behavior, 'none')
+
     def test_idempotency_raises_on_duplicate(self):
         seed_numbering(self.tenant_id)
         with self.assertRaises(IntegrityError):
@@ -240,7 +268,7 @@ class SeedLifecycleTest(SDTATestCase):
         transitions = LifecycleTransitionRule.all_objects.filter(
             tenant_id=self.tenant_id, entity_type='work_order'
         )
-        self.assertEqual(transitions.count(), 9)
+        self.assertEqual(transitions.count(), 10)
 
     def test_transition_requires_reason(self):
         seed_lifecycle(self.tenant_id)

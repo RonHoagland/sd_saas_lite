@@ -29,9 +29,11 @@ from .models import (
     Quote,
     QuoteLine,
     QuoteAsset,
+    QuoteSnapshot,
     Invoice,
     InvoiceLine,
     InvoiceAsset,
+    InvoiceSnapshot,
     WorkOrderInvoice,
     Bank,
     Payments,
@@ -351,6 +353,8 @@ class QuoteLineSerializer(TenantModelSerializer):
             'quantity',
             'unit_price',
             'line_total',
+            'is_taxable',
+            'is_discount',
         ]
         read_only_fields = TenantModelSerializer.Meta.read_only_fields + [
             'product_name',
@@ -532,6 +536,8 @@ class InvoiceLineSerializer(TenantModelSerializer):
             'quantity',
             'unit_price',
             'line_total',
+            'is_taxable',
+            'is_discount',
         ]
         read_only_fields = TenantModelSerializer.Meta.read_only_fields + [
             'product_name',
@@ -904,6 +910,48 @@ class LedgerViewSet(ReadOnlyTenantViewSet):
 
 
 # ---------------------------------------------------------------------------
+# Send snapshots (immutable; created by lifecycle on Sent)
+# ---------------------------------------------------------------------------
+
+
+class QuoteSnapshotSerializer(TenantModelSerializer):
+    class Meta:
+        model = QuoteSnapshot
+        fields = TenantModelSerializer.Meta.fields + [
+            'quote', 'subtotal', 'tax_rate', 'tax_amount', 'total',
+            'customer_company_name', 'customer_display_name', 'customer_phone',
+            'customer_address', 'lines_json',
+        ]
+        read_only_fields = fields
+
+
+class QuoteSnapshotViewSet(ReadOnlyTenantViewSet):
+    queryset = QuoteSnapshot.objects.all()
+    serializer_class = QuoteSnapshotSerializer
+    filterset_fields = ['quote_id']
+    ordering_fields = ['created_on']
+
+
+class InvoiceSnapshotSerializer(TenantModelSerializer):
+    class Meta:
+        model = InvoiceSnapshot
+        fields = TenantModelSerializer.Meta.fields + [
+            'invoice', 'subtotal', 'tax_rate', 'tax_amount', 'total',
+            'deposit_applied', 'deposit_amount',
+            'customer_company_name', 'customer_display_name', 'customer_phone',
+            'customer_address', 'lines_json',
+        ]
+        read_only_fields = fields
+
+
+class InvoiceSnapshotViewSet(ReadOnlyTenantViewSet):
+    queryset = InvoiceSnapshot.objects.all()
+    serializer_class = InvoiceSnapshotSerializer
+    filterset_fields = ['invoice_id']
+    ordering_fields = ['created_on']
+
+
+# ---------------------------------------------------------------------------
 # Router Setup
 # ---------------------------------------------------------------------------
 
@@ -923,3 +971,7 @@ router.register(r'banks', BankViewSet, basename='bank')
 router.register(r'payments', PaymentsViewSet, basename='payment')
 router.register(r'accounting', AccountingViewSet, basename='accounting')
 router.register(r'ledger', LedgerViewSet, basename='ledger')
+router.register(r'quote-snapshots', QuoteSnapshotViewSet, basename='quote-snapshot')
+router.register(
+    r'invoice-snapshots', InvoiceSnapshotViewSet, basename='invoice-snapshot',
+)

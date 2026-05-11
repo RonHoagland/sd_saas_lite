@@ -210,7 +210,7 @@ def customer_detail_view(request, pk):
         'work_orders':  _safe_count(customer, 'work_orders'),
         'quotes':       _safe_count(customer, 'quotes'),
         'invoices':     _safe_count(customer, 'invoices'),
-        'payments':     _safe_count(customer, 'payments'),
+        'payments':     customer.total_payments_count,
         'notes':        0,  # Note uses ExclusiveArcMixin — wire in Phase 2.3 follow-up.
         'documents':    0,  # Same.
     }

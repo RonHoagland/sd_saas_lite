@@ -4,6 +4,11 @@
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from .lite_limits import (
+    enforce_lite_invoice_cap_for_work_order,
+    enforce_lite_quote_cap,
+    enforce_lite_work_order_cap,
+)
 from .models import (
     ServiceRequest, WorkOrder, WorkOrderLine,
     Quote, QuoteLine, Invoice, InvoiceLine, WorkOrderInvoice
@@ -16,6 +21,7 @@ def convert_service_request_to_work_order(service_request):
     Preserves tenant_id, customer, asset, subject, and priority.
     """
     with transaction.atomic():
+        enforce_lite_work_order_cap(service_request)
         work_order = WorkOrder.objects.create(
             tenant_id=service_request.tenant_id,
             service_request=service_request,
@@ -44,6 +50,7 @@ def convert_service_request_to_quote(service_request):
     exists later.
     """
     with transaction.atomic():
+        enforce_lite_quote_cap(service_request.customer)
         quote = Quote.objects.create(
             tenant_id=service_request.tenant_id,
             customer=service_request.customer,
@@ -127,6 +134,7 @@ def convert_quote_to_invoice(quote):
         )
 
     with transaction.atomic():
+        enforce_lite_invoice_cap_for_work_order(quote)
         invoice = Invoice.objects.create(
             tenant_id=quote.tenant_id,
             customer=quote.customer,
@@ -150,7 +158,9 @@ def convert_quote_to_invoice(quote):
                 description=line.description,
                 quantity=line.quantity,
                 unit_price=line.unit_price,
-                line_total=line.line_total
+                line_total=line.line_total,
+                is_taxable=line.is_taxable,
+                is_discount=line.is_discount,
             )
 
         # Update Quote status
